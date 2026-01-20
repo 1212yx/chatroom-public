@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萱聊 - 注册</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/css/bootstrap-responsive.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.4.0-web/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <canvas class="bg-canvas" id="particleCanvas"></canvas>
+    <div class="login-container">
+        <div class="app-logo">
+            <i class="fa-solid fa-comments"></i>
+        </div>
+        <div class="app-title">萱聊</div>
+        <form id="registerForm" action="/register" method="post">
+            <div class="form-group">
+                <input type="text" class="form-control" id="nickname" name="username" placeholder="请输入昵称" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-group">
+                <select class="form-control server-select" id="server">
+                    <option value="server1">快乐星球1号</option>
+                    <option value="server2">快乐星球2号</option>
+                </select>
+            </div>
+            {% if error %}
+            <div class="form-group" style="color:#e17055;font-size:13px;margin-bottom:10px;">{{ error }}</div>
+            {% endif %}
+            <button type="submit" class="btn-login">立即注册</button>
+        </form>
+        <div class="footer-link">
+            已有账号？ <a href="{{ url_for('index') }}">立即登录</a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.5.1.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#registerForm').on('submit', function(e) {
+                var nickname = $('#nickname').val().trim();
+                if (!nickname) {
+                    e.preventDefault();
+                    alert('请输入昵称！');
+                }
+                var password = $('#password').val();
+                if (!password) {
+                    e.preventDefault();
+                    alert('请输入密码！');
+                    return;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

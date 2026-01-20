@@ -1,0 +1,166 @@
+body {
+    background: linear-gradient(120deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: gradientMove 14s ease-in-out infinite;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.bg-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 350px;
+    animation: fadeIn 0.8s ease-out;
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(6px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.app-title {
+    color: #ff6b6b;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.app-logo {
+    font-size: 40px;
+    color: #ff6b6b;
+    margin-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-control {
+    width: 100%;
+    padding: 15px 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 30px;
+    box-sizing: border-box; /* BS2 doesn't always do this */
+    font-size: 15px;
+    transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
+    height: auto; /* Override BS2 fixed height if any */
+    min-height: 48px;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+    border-color: #ff6b6b;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.18);
+}
+
+.btn-login {
+    background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 24px rgba(255, 107, 107, 0.35);
+    filter: brightness(1.02);
+}
+
+.btn-login:active {
+    transform: translateY(0) scale(1);
+}
+
+.btn-login::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -30%;
+    width: 60%;
+    height: 180%;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 45%, rgba(255,255,255,0) 100%);
+    transform: translateX(-120%) rotate(18deg);
+    transition: transform 0.45s ease;
+}
+
+.btn-login:hover::after {
+    transform: translateX(260%) rotate(18deg);
+}
+
+.btn-login:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.22), 0 10px 24px rgba(255, 107, 107, 0.25);
+}
+
+.server-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.footer-link {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #888;
+}
+
+.footer-link a {
+    color: #ff6b6b;
+    text-decoration: none;
+    transition: color 0.15s, text-shadow 0.15s;
+}
+
+.footer-link a:hover {
+    color: #ff5252;
+    text-shadow: 0 6px 18px rgba(255, 107, 107, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body {
+        animation: none;
+        background-size: cover;
+    }
+    .btn-login::after {
+        transition: none;
+    }
+}

@@ -1,0 +1,62 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>房间列表</legend>
+</fieldset>
+
+<div class="layui-row layui-col-space15">
+  {% for room in rooms %}
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">
+          <strong>{{ room['name'] }}</strong>
+          {% if room['is_banned'] %}
+          <span class="layui-badge">已封禁</span>
+          {% endif %}
+      </div>
+      <div class="layui-card-body">
+        <p>创建时间：{{ room['created_at'].split('T')[0] }}</p>
+        <p>创建人：<span class="layui-badge layui-bg-cyan">{{ room['creator_name'] or '系统' }}</span></p>
+        <p>成员总数：<span class="layui-badge layui-bg-blue">{{ room['member_count'] }}</span></p>
+        <p>封禁成员：<span class="layui-badge">{{ room['banned_member_count'] }}</span></p>
+        
+        <hr>
+        
+        <div class="layui-btn-group">
+          <a href="{{ url_for('admin.room_members', room_id=room['id']) }}" class="layui-btn layui-btn-sm layui-btn-primary">用户列表</a>
+          
+          {% if room['is_banned'] %}
+          <a href="javascript:;" data-url="{{ url_for('admin.room_ban', room_id=room['id'], status=0) }}" class="layui-btn layui-btn-sm layui-btn-normal btn-action" data-confirm="确定解封该房间吗？">解封</a>
+          {% else %}
+          <a href="javascript:;" data-url="{{ url_for('admin.room_ban', room_id=room['id'], status=1) }}" class="layui-btn layui-btn-sm layui-btn-warm btn-action" data-confirm="确定封禁该房间吗？">封禁</a>
+          {% endif %}
+          
+          <a href="javascript:;" data-url="{{ url_for('admin.room_delete', room_id=room['id']) }}" class="layui-btn layui-btn-sm layui-btn-danger btn-action" data-confirm="确定删除该房间吗？所有聊天记录将被清空！">删除</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="pagination"></div>
+
+<script>
+layui.use('laypage', function(){
+  var laypage = layui.laypage;
+  
+  laypage.render({
+    elem: 'pagination',
+    count: Number('{{ total_rooms }}'),
+    limit: 12,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        loadPage("{{ url_for('admin.room_list') }}?page=" + obj.curr);
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

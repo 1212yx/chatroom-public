@@ -1,0 +1,86 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>{{ '编辑AI模型' if mode == 'edit' else '新增AI模型' }}</legend>
+</fieldset>
+
+<form class="layui-form" method="post">
+  <div class="layui-form-item">
+    <label class="layui-form-label">名称</label>
+    <div class="layui-input-block">
+      <input type="text" name="name" required lay-verify="required" placeholder="请输入模型显示名称，例如：Qwen2.5-7B 对话" autocomplete="off" class="layui-input" value="{{ model['name'] if model else '' }}">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">API地址</label>
+    <div class="layui-input-block">
+      <input type="text" name="api_base" required lay-verify="required" placeholder="例如：https://api.siliconflow.cn/v1" autocomplete="off" class="layui-input" value="{{ model['api_base'] if model else 'https://api.siliconflow.cn/v1' }}">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">API Key</label>
+    <div class="layui-input-block">
+      <input type="password" name="api_key" required lay-verify="required" placeholder="请输入模型服务的 API Key" autocomplete="off" class="layui-input" value="{{ model['api_key'] if model else '' }}">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">模型标识</label>
+    <div class="layui-input-block">
+      <input type="text" name="model_name" required lay-verify="required" placeholder="例如：Qwen/Qwen2.5-7B-Instruct" autocomplete="off" class="layui-input" value="{{ model['model_name'] if model else 'Qwen/Qwen2.5-7B-Instruct' }}">
+    </div>
+  </div>
+
+  <div class="layui-form-item layui-form-text">
+    <label class="layui-form-label">提示词 Prompt</label>
+    <div class="layui-input-block">
+      <textarea name="prompt" placeholder="可选：为模型设置系统提示词，统一约束回答风格" class="layui-textarea" rows="4">{{ model['prompt'] if model else '' }}</textarea>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="is_active" value="1" lay-skin="switch" lay-text="启用|禁用" {{ 'checked' if not model or model['is_active'] else '' }}>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">设为默认</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="is_default" value="1" lay-skin="switch" lay-text="是|否" {{ 'checked' if model and model['is_default'] else '' }}>
+      <div class="layui-form-mid layui-word-aux" style="float: none; margin-left: 0;">选中后，将自动取消其他默认模型。</div>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" lay-submit lay-filter="aiModelForm">保存</button>
+      <a href="{{ url_for('admin.ai_model_list') }}" class="layui-btn layui-btn-primary">返回</a>
+    </div>
+  </div>
+</form>
+
+<script>
+(function(){
+  function initAiModelForm() {
+    if (!window.layui) {
+      return;
+    }
+    window.layui.use('form', function(){
+      var form = window.layui.form;
+      form.render();
+    });
+  }
+
+  if (window.layui) {
+    initAiModelForm();
+  } else {
+    window.addEventListener('load', initAiModelForm);
+  }
+})();
+</script>
+{% endblock %}

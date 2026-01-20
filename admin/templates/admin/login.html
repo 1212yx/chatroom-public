@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>萱聊后台管理系统</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.13.3/layui/css/layui.css') }}">
+  <style>
+    /* Reset & Base */
+    body, html {
+        height: 100%;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #0f172a; /* Slate 900 */
+        background-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        overflow: auto;
+    }
+    
+    /* Decoration Circles */
+    .bg-shape {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.4;
+        z-index: 0;
+    }
+    .shape-1 {
+        top: -100px;
+        left: -100px;
+        width: 500px;
+        height: 500px;
+        background: #3b82f6;
+    }
+    .shape-2 {
+        bottom: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        background: #8b5cf6;
+    }
+
+    /* Login Container */
+    .login-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 100%;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-box {
+        width: 420px;
+        padding: 50px 40px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Header */
+    .login-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .login-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+    .login-header p {
+        color: #64748b;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Form Customization */
+    .layui-form-item {
+        margin-bottom: 25px;
+        position: relative;
+    }
+    
+    .layui-input {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding-left: 45px; /* Space for icon */
+        transition: all 0.3s;
+        font-size: 15px;
+        color: #334155;
+    }
+    
+    .layui-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .layui-input::placeholder {
+        color: #cbd5e1;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 14px;
+        color: #94a3b8;
+        font-size: 18px;
+    }
+
+    /* Button */
+    .layui-btn-fluid {
+        height: 48px;
+        line-height: 48px;
+        font-size: 16px;
+        border-radius: 8px;
+        background: linear-gradient(to right, #2563eb, #3b82f6);
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+    }
+    
+    .layui-btn-fluid:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+        background: linear-gradient(to right, #1d4ed8, #2563eb);
+    }
+
+    /* Footer */
+    .footer-copyright {
+        text-align: center;
+        margin-top: 30px;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="login-wrapper">
+    <div class="login-box">
+        <div class="login-header">
+            <h2>萱聊后台管理</h2>
+            <p>Xuanchat Management System</p>
+        </div>
+        
+        <form class="layui-form" action="" method="post">
+            <div class="layui-form-item">
+                <i class="layui-icon layui-icon-username input-icon"></i>
+                <input type="text" name="username" required lay-verify="required" placeholder="请输入管理员账号" autocomplete="off" class="layui-input">
+            </div>
+            
+            <div class="layui-form-item">
+                <i class="layui-icon layui-icon-password input-icon"></i>
+                <input type="password" name="password" required lay-verify="required" placeholder="请输入登录密码" autocomplete="off" class="layui-input">
+            </div>
+
+            {% if error %}
+            <div class="layui-form-item" style="color: #ef4444; text-align: center; font-size: 14px; background: #fef2f2; padding: 10px; border-radius: 6px; border: 1px solid #fee2e2;">
+                <i class="layui-icon layui-icon-tips" style="margin-right: 5px;"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="layui-form-item" style="margin-top: 30px;">
+                <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="login">登 录</button>
+            </div>
+        </form>
+        
+        <div class="footer-copyright">
+            © 2026 Xuanchat Technology. All Rights Reserved.
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='lib/layui-v2.13.3/layui/layui.js') }}"></script>
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  
+  // Submit loading effect
+  form.on('submit(login)', function(data){
+    var btn = data.elem;
+    btn.innerHTML = '<i class="layui-icon layui-icon-loading layui-anim layui-anim-rotate layui-anim-loop"></i> 登录中...';
+    btn.classList.add('layui-btn-disabled');
+    // Allow form submission to proceed
+    return true; 
+  });
+});
+</script>
+</body>
+</html>

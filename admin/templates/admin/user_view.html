@@ -1,0 +1,48 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>用户详情</legend>
+</fieldset>
+
+<table class="layui-table" style="width: 500px;">
+  <colgroup>
+    <col width="150">
+    <col>
+  </colgroup>
+  <tbody>
+    <tr>
+      <td>ID</td>
+      <td>{{ user['id'] }}</td>
+    </tr>
+    <tr>
+      <td>用户名</td>
+      <td>{{ user['username'] }}</td>
+    </tr>
+    <tr>
+      <td>创建时间</td>
+      <td>{{ user['created_at'] }}</td>
+    </tr>
+    <tr>
+      <td>最后登录时间</td>
+      <td>{{ user['last_login_at'] }}</td>
+    </tr>
+    <tr>
+      <td>账号状态</td>
+      <td>
+        {% if user['is_banned'] %}
+        <span class="layui-badge">封禁</span>
+        {% else %}
+        <span class="layui-badge layui-bg-green">正常</span>
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="layui-btn-container">
+  <a href="{{ url_for('admin.user_list') }}" class="layui-btn layui-btn-primary">返回列表</a>
+  <a href="{{ url_for('admin.user_edit', user_id=user['id']) }}" class="layui-btn">编辑用户</a>
+</div>
+
+{% endblock %}

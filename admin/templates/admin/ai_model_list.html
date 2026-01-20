@@ -1,0 +1,478 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<style>
+.ai-model-grid {
+  margin-top: 15px;
+}
+.ai-model-card {
+  position: relative;
+  background: radial-gradient(circle at top left, rgba(0, 255, 255, 0.2), transparent 60%), radial-gradient(circle at bottom right, rgba(120, 80, 255, 0.25), transparent 55%), linear-gradient(135deg, #050816, #020617);
+  border-radius: 12px;
+  padding: 16px 18px 14px 18px;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  overflow: hidden;
+}
+.ai-model-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+}
+.ai-model-card:hover::before {
+  opacity: 1;
+}
+.ai-model-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ai-model-name {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #e5e7eb;
+}
+.ai-model-tagline {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+.ai-model-body {
+  color: #9ca3af;
+  font-size: 13px;
+}
+.ai-model-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.ai-meta-label {
+  color: #6b7280;
+  font-size: 12px;
+}
+.ai-meta-value {
+  color: #e5e7eb;
+  font-size: 12px;
+}
+.ai-model-stats {
+  display: flex;
+  margin-top: 8px;
+  gap: 12px;
+}
+.ai-model-stat {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.4));
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+}
+.ai-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+.ai-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-top: 2px;
+}
+.ai-model-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ai-model-actions .layui-btn {
+  margin-right: 4px;
+}
+.ai-model-footer-right {
+  font-size: 11px;
+  color: #6b7280;
+}
+.ai-status-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+.ai-status-on {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.35));
+  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+.ai-status-off {
+  background: linear-gradient(90deg, rgba(75, 85, 99, 0.35), rgba(31, 41, 55, 0.7));
+  color: #e5e7eb;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+}
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.7);
+  color: #c7d2fe;
+  font-size: 11px;
+}
+.ai-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #a5b4fc, #4f46e5);
+  margin-right: 5px;
+}
+.ai-chip-text {
+  letter-spacing: 0.06em;
+}
+.ai-prompt-preview {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ai-model-created {
+  font-size: 11px;
+  color: #4b5563;
+}
+.ai-test-dialog {
+  padding: 10px 10px 8px 10px;
+  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 1));
+}
+.ai-test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ai-test-title {
+  font-size: 14px;
+  color: #e5e7eb;
+}
+.ai-test-usage {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.ai-test-messages {
+  height: 320px;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  padding: 8px;
+  overflow-y: auto;
+}
+.ai-msg-item {
+  margin-bottom: 6px;
+}
+.ai-msg-role {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+.ai-msg-role-user {
+  color: #38bdf8;
+}
+.ai-msg-role-ai {
+  color: #a855f7;
+}
+.ai-msg-content {
+  display: inline-block;
+  max-width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ai-msg-user {
+  text-align: right;
+}
+.ai-msg-user .ai-msg-content {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(8, 47, 73, 0.95));
+  color: #e0f2fe;
+}
+.ai-msg-ai .ai-msg-content {
+  background: linear-gradient(135deg, rgba(192, 132, 252, 0.26), rgba(76, 29, 149, 0.95));
+  color: #f3e8ff;
+}
+.ai-test-input-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+}
+.ai-test-input-row textarea {
+  resize: none;
+  height: 60px;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 6px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  color: #e5e7eb;
+}
+.ai-test-input-row textarea:focus {
+  border-color: rgba(56, 189, 248, 0.9);
+}
+.ai-test-input-row .layui-btn {
+  align-self: flex-end;
+}
+</style>
+
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>AI模型引擎</legend>
+</fieldset>
+
+<div class="layui-btn-container">
+  <a href="{{ url_for('admin.ai_model_add') }}" class="layui-btn layui-btn-normal">
+    <i class="layui-icon">&#xe61f;</i>&nbsp;新增模型
+  </a>
+</div>
+
+<div class="layui-row layui-col-space16 ai-model-grid">
+  {% for model in models %}
+  <div class="layui-col-md6">
+    <div class="ai-model-card">
+      <div class="ai-model-header">
+        <div>
+          <div class="ai-model-name">{{ model['name'] }}</div>
+          <div class="ai-model-tagline">
+            <span class="ai-chip">
+              <span class="ai-chip-dot"></span>
+              <span class="ai-chip-text">MODEL {{ model['model_name'] }}</span>
+            </span>
+          </div>
+        </div>
+        <div>
+          {% if model['is_default'] %}
+          <span class="ai-status-badge ai-status-on" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: rgba(59, 130, 246, 0.6);">默认</span>
+          {% endif %}
+          {% if model['is_active'] %}
+          <span class="ai-status-badge ai-status-on">运行中</span>
+          {% else %}
+          <span class="ai-status-badge ai-status-off">已停用</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="ai-model-body">
+        <div class="ai-model-meta">
+          <div class="ai-meta-label">API Endpoint</div>
+          <div class="ai-meta-value">{{ model['api_base'] }}</div>
+        </div>
+        <div class="ai-model-meta">
+          <div class="ai-meta-label">密钥</div>
+          <div class="ai-meta-value">
+            {% if model['api_key'] %}
+            ****{{ model['api_key'][-4:] }}
+            {% else %}
+            未配置
+            {% endif %}
+          </div>
+        </div>
+        <div class="ai-prompt-preview">
+          {% if model['prompt'] %}
+          {{ model['prompt'][:80] }}{% if model['prompt']|length > 80 %}...{% endif %}
+          {% else %}
+          未设置提示词
+          {% endif %}
+        </div>
+        <div class="ai-model-stats">
+          <div class="ai-model-stat">
+            <div class="ai-stat-label">总 Tokens</div>
+            <div class="ai-stat-value">{{ model['total_tokens'] or 0 }}</div>
+          </div>
+          <div class="ai-model-stat">
+            <div class="ai-stat-label">调用次数</div>
+            <div class="ai-stat-value">{{ model['total_requests'] or 0 }}</div>
+          </div>
+          <div class="ai-model-stat">
+            <div class="ai-stat-label">最近延迟(ms)</div>
+            <div class="ai-stat-value">
+              {% if model['last_latency_ms'] %}
+              {{ "%.0f"|format(model['last_latency_ms']) }}
+              {% else %}
+              -
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-model-footer">
+        <div class="ai-model-actions">
+          <a href="{{ url_for('admin.ai_model_edit', model_id=model['id']) }}" class="layui-btn layui-btn-sm layui-btn-normal">编辑</a>
+          <a href="javascript:;" data-url="{{ url_for('admin.ai_model_delete', model_id=model['id']) }}" class="layui-btn layui-btn-sm layui-btn-danger btn-action" data-confirm="确定删除该模型配置吗？">删除</a>
+          {% if model['is_active'] %}
+          <a href="javascript:;" data-url="{{ url_for('admin.ai_model_toggle', model_id=model['id'], status=0) }}" class="layui-btn layui-btn-sm">停用</a>
+          {% else %}
+          <a href="javascript:;" data-url="{{ url_for('admin.ai_model_toggle', model_id=model['id'], status=1) }}" class="layui-btn layui-btn-sm layui-btn-warm">启用</a>
+          {% endif %}
+          <a href="javascript:;" class="layui-btn layui-btn-sm layui-btn-normal ai-model-test" data-id="{{ model['id'] }}" data-name="{{ model['name'] }}">测试</a>
+        </div>
+        <div class="ai-model-footer-right">
+          {% if model['last_test_at'] %}
+          最近测试：{{ model['last_test_at'].split('T')[0] }}
+          {% else %}
+          创建时间：{{ model['created_at'].split('T')[0] if model['created_at'] else '' }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="pagination"></div>
+
+<div id="ai-model-test-panel" class="ai-test-dialog" style="display:none;">
+  <div class="ai-test-header">
+    <div class="ai-test-title">
+      <span id="ai-test-model-name"></span>
+    </div>
+    <div class="ai-test-usage" id="ai-test-usage">Tokens: 0 | 延迟: - ms</div>
+  </div>
+  <div class="ai-test-messages" id="ai-test-messages"></div>
+  <div class="ai-test-input-row">
+    <textarea id="ai-test-input" class="layui-textarea" placeholder="输入要测试的问题，Enter 发送，Shift+Enter 换行"></textarea>
+    <button id="ai-test-send" class="layui-btn layui-btn-normal">发送</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  function initAiModelPage() {
+    if (!window.layui) {
+      return;
+    }
+    window.layui.use(['laypage', 'jquery', 'layer'], function(){
+      var laypage = window.layui.laypage;
+      var $ = window.layui.$;
+      var layer = window.layui.layer;
+
+      laypage.render({
+        elem: 'pagination',
+        count: Number('{{ total_models }}'),
+        limit: 6,
+        curr: Number('{{ page }}'),
+        jump: function(obj, first){
+          if(!first){
+            if (window.loadPage) {
+              window.loadPage("{{ url_for('admin.ai_model_list') }}?page=" + obj.curr);
+            } else {
+              window.location.href = "{{ url_for('admin.ai_model_list') }}?page=" + obj.curr;
+            }
+          }
+        }
+      });
+
+      var currentModelId = null;
+      var chatHistory = [];
+
+      function appendMessage(role, content) {
+        var cls = role === 'user' ? 'ai-msg-user' : 'ai-msg-ai';
+        var roleCls = role === 'user' ? 'ai-msg-role-user' : 'ai-msg-role-ai';
+        var roleText = role === 'user' ? '我' : 'AI';
+        var safeContent = $('<div>').text(content || '').html();
+        var html = ''
+          + '<div class="ai-msg-item ' + cls + '">'
+          +   '<div class="ai-msg-role ' + roleCls + '">' + roleText + '</div>'
+          +   '<div class="ai-msg-content">' + safeContent + '</div>'
+          + '</div>';
+        $('#ai-test-messages').append(html);
+        var box = $('#ai-test-messages')[0];
+        if (box) {
+          box.scrollTop = box.scrollHeight;
+        }
+      }
+
+      $(document).on('click', '.ai-model-test', function(){
+        currentModelId = $(this).data('id');
+        var name = $(this).data('name') || '';
+        chatHistory = [];
+        $('#ai-test-messages').html('');
+        $('#ai-test-input').val('');
+        $('#ai-test-model-name').text(name);
+        $('#ai-test-usage').text('Tokens: 0 | 延迟: - ms');
+        layer.open({
+          type: 1,
+          title: 'AI模型测试 - ' + name,
+          area: ['620px', '540px'],
+          shadeClose: true,
+          content: $('#ai-model-test-panel')
+        });
+      });
+
+      $('#ai-test-send').on('click', function(){
+        if (!currentModelId) {
+          return;
+        }
+        var text = $('#ai-test-input').val().trim();
+        if (!text) {
+          return;
+        }
+        appendMessage('user', text);
+        chatHistory.push({role: 'user', content: text});
+        $('#ai-test-input').val('');
+        var $btn = $('#ai-test-send');
+        $btn.addClass('layui-btn-disabled').attr('disabled', true);
+
+        $.ajax({
+          url: "{{ url_for('admin.ai_model_test_api', model_id=0) }}".replace('0', String(currentModelId)),
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({messages: chatHistory}),
+          success: function(res){
+            try {
+              if (typeof res === 'string') {
+                res = JSON.parse(res);
+              }
+            } catch (e) {
+              layer.msg('解析响应失败', {icon: 2});
+              return;
+            }
+            if (res.code === 0 && res.data) {
+              var reply = res.data.reply || '';
+              if (reply) {
+                chatHistory.push({role: 'assistant', content: reply});
+                appendMessage('assistant', reply);
+              }
+              var usage = res.data.usage || {};
+              $('#ai-test-usage').text(
+                'Tokens: ' + (usage.total_tokens || 0) +
+                ' | 延迟: ' + (res.data.latency_ms || 0) + ' ms'
+              );
+            } else {
+              layer.msg(res.msg || '调用失败', {icon: 2});
+            }
+          },
+          error: function(xhr){
+            layer.msg('请求失败: ' + xhr.statusText, {icon: 2});
+          },
+          complete: function(){
+            var btn = $('#ai-test-send');
+            btn.removeClass('layui-btn-disabled').attr('disabled', false);
+          }
+        });
+      });
+
+      $('#ai-test-input').on('keydown', function(e){
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          $('#ai-test-send').click();
+        }
+      });
+    });
+  }
+
+  if (window.layui) {
+    initAiModelPage();
+  } else {
+    window.addEventListener('load', initAiModelPage);
+  }
+})();
+</script>
+{% endblock %}

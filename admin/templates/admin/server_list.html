@@ -1,0 +1,59 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>ws服务器管理</legend>
+</fieldset>
+
+<div class="layui-btn-container">
+    <a href="{{ url_for('admin.server_add') }}" class="layui-btn layui-btn-normal">添加服务器</a>
+</div>
+
+<div class="layui-row layui-col-space15">
+  {% for server in servers %}
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">
+          <strong>{{ server['name'] }}</strong>
+          {% if server['is_active'] %}
+          <span class="layui-badge layui-bg-green" style="float: right; margin-top: 10px;">运行中</span>
+          {% else %}
+          <span class="layui-badge layui-bg-gray" style="float: right; margin-top: 10px;">已停用</span>
+          {% endif %}
+      </div>
+      <div class="layui-card-body">
+        <p>地址：<span class="layui-badge layui-bg-black">{{ server['protocol'] }}://{{ server['host'] }}:{{ server['port'] }}{{ server['path'] }}</span></p>
+        <p>创建时间：{{ server['created_at'].split('T')[0] }}</p>
+        
+        <hr>
+        
+        <div class="layui-btn-group">
+          <a href="{{ url_for('admin.server_edit', server_id=server['id']) }}" class="layui-btn layui-btn-sm layui-btn-normal">编辑</a>
+          <a href="javascript:;" data-url="{{ url_for('admin.server_delete', server_id=server['id']) }}" class="layui-btn layui-btn-sm layui-btn-danger btn-action" data-confirm="确定删除该服务器配置吗？">删除</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="pagination"></div>
+
+<script>
+layui.use('laypage', function(){
+  var laypage = layui.laypage;
+  
+  laypage.render({
+    elem: 'pagination',
+    count: Number('{{ total_servers }}'),
+    limit: 12,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        loadPage("{{ url_for('admin.server_list') }}?page=" + obj.curr);
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

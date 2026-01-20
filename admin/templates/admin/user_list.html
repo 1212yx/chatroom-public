@@ -1,0 +1,173 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>用户列表</legend>
+</fieldset>
+
+<div class="layui-form-item">
+  <div class="layui-inline">
+    <form class="layui-form" action="{{ url_for('admin.user_list') }}" method="get">
+      <div class="layui-input-inline" style="width: 200px;">
+        <input type="text" name="q" placeholder="请输入用户名" autocomplete="off" class="layui-input" value="{{ query }}">
+      </div>
+      <button class="layui-btn" lay-submit>搜索</button>
+      <a href="{{ url_for('admin.user_list') }}" class="layui-btn layui-btn-primary">重置</a>
+    </form>
+  </div>
+  <div class="layui-inline">
+      <button class="layui-btn layui-btn-danger" onclick="batchOperation('delete')">批量删除</button>
+      <button class="layui-btn layui-btn-warm" onclick="batchOperation('ban')">批量封禁</button>
+      <button class="layui-btn layui-btn-normal" onclick="batchOperation('unban')">批量解封</button>
+  </div>
+</div>
+
+<table class="layui-table">
+  <thead>
+    <tr>
+      <th style="width: 50px;">
+        <input type="checkbox" id="check-all" onclick="toggleSelectAll()">
+      </th>
+      <th>ID</th>
+      <th>用户名</th>
+      <th>创建时间</th>
+      <th>最后登录</th>
+      <th>状态</th>
+      <th>操作</th>
+    </tr> 
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>
+        {% if user['is_ai'] %}
+        <input type="checkbox" disabled>
+        {% else %}
+        <input type="checkbox" name="user_id" value="{{ user['id'] }}" class="user-checkbox">
+        {% endif %}
+      </td>
+      <td>{{ user['id'] }}</td>
+      <td>
+          {{ user['username'] }}
+          {% if user['is_ai'] %}
+          <span class="layui-badge layui-bg-blue">AI</span>
+          {% endif %}
+      </td>
+      <td>{{ user['created_at'] }}</td>
+      <td>{{ user['last_login_at'] }}</td>
+      <td>
+          {% if user['is_banned'] %}
+          <span class="layui-badge">封禁</span>
+          {% else %}
+          <span class="layui-badge layui-bg-green">正常</span>
+          {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('admin.user_view', user_id=user['id']) }}" class="layui-btn layui-btn-xs layui-btn-primary">查看</a>
+        <a href="{{ url_for('admin.user_edit', user_id=user['id']) }}" class="layui-btn layui-btn-xs">编辑</a>
+        {% if not user['is_ai'] %}
+        {% if user['is_banned'] %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_ban', user_id=user['id'], status=0) }}" class="layui-btn layui-btn-xs layui-btn-normal btn-action" data-confirm="确定解封该用户吗？">解封</a>
+        {% else %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_ban', user_id=user['id'], status=1) }}" class="layui-btn layui-btn-xs layui-btn-warm btn-action" data-confirm="确定封禁该用户吗？">封禁</a>
+        {% endif %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_delete', user_id=user['id']) }}" class="layui-btn layui-btn-xs layui-btn-danger btn-action" data-confirm="确定删除该用户吗？">删除</a>
+        {% else %}
+        <button class="layui-btn layui-btn-xs layui-btn-disabled">封禁</button>
+        <button class="layui-btn layui-btn-xs layui-btn-disabled">删除</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div id="pagination"></div>
+
+<script>
+layui.use(['laypage', 'layer', 'jquery'], function(){
+  var laypage = layui.laypage;
+  var layer = layui.layer;
+  var $ = layui.$;
+  
+  //执行一个laypage实例
+  laypage.render({
+    elem: 'pagination',
+    count: Number('{{ total_users }}'),
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        var query = "{{ query or '' }}";
+        var url = "?page=" + obj.curr;
+        if(query) {
+            url += "&q=" + query;
+        }
+        window.location.href = url;
+      }
+    }
+  });
+
+  window.toggleSelectAll = function() {
+      var isChecked = $('#check-all').prop('checked');
+      $('.user-checkbox').prop('checked', isChecked);
+  }
+
+  window.batchOperation = function(type) {
+      var selected = [];
+      $('.user-checkbox:checked').each(function() {
+          selected.push($(this).val());
+      });
+
+      if (selected.length === 0) {
+          layer.msg('请先选择用户');
+          return;
+      }
+
+      var confirmMsg = '确定要执行批量操作吗？';
+      var url = '';
+      var data = {ids: selected};
+
+      if (type === 'delete') {
+          confirmMsg = '确定要删除选中的 ' + selected.length + ' 个用户吗？此操作不可恢复！';
+          url = "{{ url_for('admin.batch_delete') }}";
+      } else if (type === 'ban') {
+          confirmMsg = '确定要封禁选中的 ' + selected.length + ' 个用户吗？';
+          url = "{{ url_for('admin.batch_ban') }}";
+          data.is_banned = 1;
+      } else if (type === 'unban') {
+          confirmMsg = '确定要解封选中的 ' + selected.length + ' 个用户吗？';
+          url = "{{ url_for('admin.batch_ban') }}";
+          data.is_banned = 0;
+      }
+
+      layer.confirm(confirmMsg, function(index){
+          $.ajax({
+              url: url,
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(data),
+              success: function(res) {
+                  res = JSON.parse(res);
+                  if (res.code === 0) {
+                      layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                          if (window.loadPage) {
+                              window.loadPage(location.href, false);
+                          } else {
+                              location.reload();
+                          }
+                      });
+                  } else {
+                      layer.msg(res.msg, {icon: 2});
+                  }
+              },
+              error: function() {
+                  layer.msg('服务器错误', {icon: 2});
+              }
+          });
+          layer.close(index);
+      });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>{{ '编辑服务器' if mode == 'edit' else '添加服务器' }}</legend>
+</fieldset>
+
+<form class="layui-form" method="post">
+  <div class="layui-form-item">
+    <label class="layui-form-label">服务器名称</label>
+    <div class="layui-input-block">
+      <input type="text" name="name" required lay-verify="required" placeholder="请输入服务器名称" autocomplete="off" class="layui-input" value="{{ server['name'] if server else '' }}">
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">协议</label>
+    <div class="layui-input-block">
+      <select name="protocol" lay-verify="required">
+        <option value="ws" {{ 'selected' if server and server['protocol'] == 'ws' else '' }}>ws</option>
+        <option value="wss" {{ 'selected' if server and server['protocol'] == 'wss' else '' }}>wss</option>
+      </select>
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">主机 (Host)</label>
+    <div class="layui-input-block">
+      <input type="text" name="host" required lay-verify="required" placeholder="例如: 127.0.0.1 或 domain.com" autocomplete="off" class="layui-input" value="{{ server['host'] if server else '127.0.0.1' }}">
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">端口 (Port)</label>
+    <div class="layui-input-block">
+      <input type="number" name="port" required lay-verify="required" placeholder="例如: 5000" autocomplete="off" class="layui-input" value="{{ server['port'] if server else '5000' }}">
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">路径 (Path)</label>
+    <div class="layui-input-block">
+      <input type="text" name="path" placeholder="例如: /ws" autocomplete="off" class="layui-input" value="{{ server['path'] if server else '/ws' }}">
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="is_active" value="1" lay-skin="switch" lay-text="开启|关闭" {{ 'checked' if not server or server['is_active'] else '' }}>
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+      <a href="{{ url_for('admin.server_list') }}" class="layui-btn layui-btn-primary">返回</a>
+    </div>
+  </div>
+</form>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form;
+  form.render();
+});
+</script>
+{% endblock %}

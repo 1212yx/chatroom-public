@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>萱聊业务管理系统</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui-v2.13.3/layui/css/layui.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.4.0-web/css/all.min.css') }}">
+  <script src="{{ url_for('static', filename='lib/layui-v2.13.3/layui/layui.js') }}"></script>
+  <style>
+    .layui-btn,
+    .layui-btn-sm,
+    .layui-btn-xs,
+    .layui-btn-primary,
+    .layui-btn-normal,
+    .layui-btn-warm,
+    .layui-btn-danger {
+      border-radius: 999px;
+    }
+
+    .layui-btn-group .layui-btn,
+    .layui-btn-group .layui-btn-sm,
+    .layui-btn-group .layui-btn-xs {
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+  <div class="layui-header">
+    <div class="layui-logo">萱聊管理系统</div>
+    <ul class="layui-nav layui-layout-right">
+      <li class="layui-nav-item">
+        <a href="javascript:;">
+          {{ session.get('admin_name', 'Admin') }}
+        </a>
+      </li>
+      <li class="layui-nav-item"><a href="{{ url_for('admin.logout') }}">退出</a></li>
+    </ul>
+  </div>
+  
+  <div class="layui-side layui-bg-black">
+    <div class="layui-side-scroll">
+      <ul class="layui-nav layui-nav-tree" lay-filter="test">
+        {% for category, items in sidebar_menus.items() %}
+        <li class="layui-nav-item layui-nav-itemed">
+          <a href="javascript:;">{{ category }}</a>
+          <dl class="layui-nav-child">
+            {% for menu in items %}
+            <dd>
+              <a href="{{ menu['url'] }}">
+                {% if menu['icon'] %}
+                <i class="{{ menu['icon'] }}" style="margin-right:4px;"></i>
+                {% endif %}
+                {{ menu['name'] }}
+              </a>
+            </dd>
+            {% endfor %}
+          </dl>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  
+  <div class="layui-body" id="app-body">
+    <div style="padding: 15px;" id="main-content">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="layui-alert layui-bg-green" style="padding: 10px; margin-bottom: 10px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+  </div>
+  
+  <div class="layui-footer">
+    <!-- 底部固定区域 -->
+    © xuanchat.com - 萱聊业务管理系统
+  </div>
+</div>
+<script>
+//JavaScript代码区域
+layui.use(['element', 'jquery', 'layer'], function(){
+  var element = layui.element;
+  var $ = layui.$;
+  var layer = layui.layer;
+
+  // SPA Navigation
+  $(document).on('click', 'a', function(e) {
+      var url = $(this).attr('href');
+      
+      // Ignore javascript:;, anchors, and target="_blank"
+      if (!url || url.indexOf('javascript:;') === 0 || url.indexOf('#') === 0 || $(this).attr('target') === '_blank') {
+          return;
+      }
+
+      // Ignore logout
+      if (url.indexOf('logout') !== -1) {
+          return;
+      }
+
+      e.preventDefault();
+      loadPage(url);
+  });
+
+  // Handle browser back/forward
+   window.onpopstate = function(event) {
+       if (event.state && event.state.url) {
+           loadPage(event.state.url, false);
+       } else {
+           location.reload();
+       }
+   };
+ 
+   window.loadPage = function(url, pushState) {
+       if (pushState === undefined) pushState = true;
+       
+       // Check if we need to load dashboard via iframe (e.g. from history back/forward)
+       if (url.indexOf('/admin/dashboard') !== -1) {
+           var iframeHtml = '<iframe src="' + url + '" style="width:100%; height:100%; border:none;" id="dashboard-iframe" allowfullscreen></iframe>';
+           $('#main-content').html(iframeHtml);
+           
+           var adjustIframe = function() {
+               var height = $(window).height() - $('.layui-header').outerHeight() - $('.layui-footer').outerHeight() - 40; 
+               $('#dashboard-iframe').height(height);
+               $('#main-content').css({
+                   'padding': '0',
+                   'height': height + 'px',
+                   'overflow': 'hidden'
+               });
+           };
+           adjustIframe();
+           $(window).resize(adjustIframe);
+           
+           if (pushState) {
+               history.pushState({url: url}, '', url);
+           }
+           return;
+       }
+
+       // Reset main-content style for normal pages
+       $('#main-content').css({
+           'padding': '15px',
+           'height': 'auto',
+           'overflow': 'auto'
+       });
+       $(window).off('resize'); // Remove dashboard resize handler if any
+       
+       var index = layer.load(1);
+       
+       var timestamp = new Date().getTime();
+      var requestUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + timestamp;
+      
+      $.ajax({
+          url: requestUrl,
+          type: 'GET',
+          cache: false,
+          success: function(html) {
+               $('#main-content').html(html);
+               if (pushState) {
+                   history.pushState({url: url}, '', url);
+               }
+               // Re-render form elements if needed
+               layui.form.render();
+               element.init();
+               layer.close(index);
+           },
+           error: function(xhr) {
+               layer.close(index);
+               if (xhr.status === 401) {
+                   location.href = "{{ url_for('admin.login') }}";
+               } else {
+                   layer.msg('加载失败: ' + xhr.statusText, {icon: 2});
+               }
+           }
+       });
+   }
+ 
+   // Intercept Form Submit for Search
+   $(document).on('submit', 'form', function(e) {
+       if ($(this).attr('target') === '_blank') return;
+       if ($(this).attr('action') && $(this).attr('action').indexOf('login') !== -1) return; // Allow normal login
+       
+       e.preventDefault();
+       var url = $(this).attr('action') || window.location.href;
+       var method = $(this).attr('method') || 'GET';
+       var data = $(this).serialize();
+       
+       var index = layer.load(1);
+       
+       $.ajax({
+           url: url,
+           type: method,
+           data: data,
+           success: function(html) {
+               // If redirect or success message in JSON format? 
+               // Currently our backend returns HTML for views, so we assume HTML updates
+               // But for Edit/Post actions, backend might redirect.
+               // $.ajax follows redirects automatically for GET, but returns the content of the redirected page.
+               
+               $('#main-content').html(html);
+               
+               // If it was a GET search, push state
+               if (method.toUpperCase() === 'GET') {
+                   var newUrl = url + '?' + data;
+                   history.pushState({url: newUrl}, '', newUrl);
+               }
+               
+               layui.form.render();
+               element.init();
+               layer.close(index);
+           },
+           error: function(xhr) {
+               layer.close(index);
+               layer.msg('操作失败', {icon: 2});
+           }
+       });
+   });
+
+   // Handle generic action buttons with confirmation
+   $(document).on('click', '.btn-action', function(e) {
+       e.preventDefault();
+       var url = $(this).data('url');
+       var msg = $(this).data('confirm');
+       
+       if(msg) {
+           layer.confirm(msg, function(index) {
+               layer.close(index);
+               loadPage(url);
+           });
+       } else {
+           loadPage(url);
+       }
+   });
+
+});
+</script>
+</body>
+</html>

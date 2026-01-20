@@ -1,0 +1,3336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萱聊 - 聊天室</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.4.0-web/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <script src="{{ url_for('static', filename='lib/marked/marked.min.js') }}"></script>
+    <style>
+        .markdown-body {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .markdown-body p { margin-bottom: 0.5em; }
+        .markdown-body pre { background: #f6f8fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .markdown-body code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .message-bubble.markdown-body img { max-width: 100%; }
+
+            /* Weather Card - Immersive Style (Optimized) */
+            .weather-card {
+                width: 320px;
+                border-radius: 24px;
+                color: white;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+                margin: 10px 0;
+                overflow: hidden;
+                position: relative;
+                background: linear-gradient(180deg, #599afb 0%, #3b76e1 100%);
+                text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                transition: transform 0.3s;
+            }
+            .weather-card:hover {
+                transform: translateY(-5px);
+            }
+
+            /* Dynamic Backgrounds */
+            .weather-bg-sunny { background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%); }
+            .weather-bg-cloudy { background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); }
+            .weather-bg-rain { background: linear-gradient(180deg, #203a43 0%, #2c5364 100%); }
+            .weather-bg-haze { background: linear-gradient(180deg, #8e9eab 0%, #eef2f3 100%); color: #5f6c7b; text-shadow: none; }
+
+            .weather-header {
+                text-align: center;
+                padding-top: 30px;
+            }
+
+            .weather-location {
+                font-size: 20px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .weather-main {
+                text-align: center;
+                padding: 10px 0 20px 0;
+            }
+
+            .weather-temp {
+                font-size: 84px;
+                font-weight: 200;
+                line-height: 1;
+                margin-left: 10px; /* Optical centering */
+                letter-spacing: -2px;
+            }
+            
+            .weather-unit {
+                font-size: 30px;
+                vertical-align: top;
+                position: relative;
+                top: 15px;
+            }
+
+            .weather-range {
+                font-size: 18px;
+                opacity: 0.95;
+                margin-top: 5px;
+                font-weight: 500;
+            }
+
+            .weather-condition {
+                font-size: 16px;
+                margin-top: 8px;
+                opacity: 0.9;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .weather-badge {
+                background: rgba(255,255,255,0.2);
+                padding: 2px 8px;
+                border-radius: 6px;
+                font-size: 12px;
+            }
+
+            .weather-details-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                background: rgba(255,255,255,0.15);
+                margin: 0 20px 25px 20px;
+                border-radius: 16px;
+                padding: 15px 0;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.2);
+            }
+
+            .weather-detail-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-size: 12px;
+                gap: 6px;
+                border-right: 1px solid rgba(255,255,255,0.1);
+            }
+            .weather-detail-item:last-child {
+                border-right: none;
+            }
+
+            .weather-detail-label {
+                opacity: 0.8;
+            }
+            .weather-detail-value {
+                font-weight: 600;
+                font-size: 15px;
+            }
+
+            .weather-warning {
+                background: rgba(255, 152, 0, 0.85);
+                margin: 0 20px 15px 20px;
+                padding: 10px 15px;
+                border-radius: 12px;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: white;
+                box-shadow: 0 2px 10px rgba(255, 152, 0, 0.3);
+            }
+
+            .movie-card {
+                width: 400px; /* Wider for video */
+                max-width: 100%;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+                background: #000;
+                margin: 10px 0;
+            }
+            .movie-container {
+                position: relative;
+                width: 100%;
+                padding-bottom: 75%; /* 4:3 Aspect Ratio (3/4 = 0.75) */
+                height: 0;
+            }
+            .movie-container iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+            .movie-header {
+                padding: 10px 15px;
+                background: #222;
+                color: #fff;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .btn-fullscreen {
+                background: rgba(255,255,255,0.1);
+                border: none;
+                color: #fff;
+                padding: 4px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: background 0.2s;
+            }
+            .btn-fullscreen:hover {
+                background: rgba(255,255,255,0.2);
+            }
+            .news-card {
+                width: 380px;
+                max-width: 100%;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 8px 25px rgba(15,23,42,0.18);
+                background: #ffffff;
+                margin: 10px 0;
+                font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            }
+            .news-header {
+                padding: 10px 16px;
+                background: linear-gradient(135deg,#2563eb 0%,#4f46e5 100%);
+                color: #ffffff;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .news-header-title {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 600;
+            }
+            .news-body {
+                padding: 10px 16px 12px 16px;
+                background: #f9fafb;
+            }
+            .news-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+            .news-item {
+                padding: 6px 0;
+                border-top: 1px solid #e5e7eb;
+                cursor: pointer;
+            }
+            .news-item:first-child {
+                border-top: none;
+            }
+            .news-title {
+                font-size: 14px;
+                color: #111827;
+                font-weight: 500;
+                margin-bottom: 2px;
+            }
+            .news-meta {
+                font-size: 12px;
+                color: #6b7280;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .news-meta span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .music-card {
+                width: 380px;
+                max-width: 100%;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 8px 25px rgba(15,23,42,0.18);
+                background: #020617;
+                color: #e5e7eb;
+                margin: 10px 0;
+                font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            }
+            .music-card-header {
+                padding: 10px 16px;
+                background: linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%);
+                color: #ffffff;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .music-card-title {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 600;
+            }
+            .music-card-title i {
+                font-size: 14px;
+            }
+            .music-card-time {
+                font-size: 12px;
+                opacity: 0.9;
+            }
+            .music-card-body {
+                padding: 12px 16px 14px 16px;
+                background: radial-gradient(circle at top left,#0f172a 0%,#020617 55%,#020617 100%);
+            }
+            .music-primary {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 8px;
+            }
+            .music-cover {
+                width: 54px;
+                height: 54px;
+                border-radius: 12px;
+                background-size: cover;
+                background-position: center;
+                background-color: #111827;
+                flex-shrink: 0;
+            }
+            .music-primary-main {
+                flex: 1;
+                min-width: 0;
+            }
+            .music-primary-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #f9fafb;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .music-primary-meta {
+                font-size: 12px;
+                color: #9ca3af;
+                margin-top: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .music-primary-extra {
+                margin-top: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .music-primary-extra span {
+                font-size: 11px;
+                color: #6b7280;
+            }
+            .music-play-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                border-radius: 999px;
+                border: 1px solid rgba(248,250,252,0.2);
+                font-size: 12px;
+                color: #f9fafb;
+                text-decoration: none;
+                background: rgba(15,23,42,0.9);
+            }
+            .music-play-btn i {
+                font-size: 12px;
+            }
+            .music-play-btn:hover {
+                background: rgba(55,65,81,0.95);
+                text-decoration: none;
+            }
+            .music-track-list {
+                list-style: none;
+                margin: 8px 0 0 0;
+                padding: 8px 0 0 0;
+                border-top: 1px solid rgba(55,65,81,0.7);
+            }
+            .music-track-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 4px 0;
+                font-size: 12px;
+                color: #9ca3af;
+            }
+            .music-track-index {
+                width: 18px;
+                text-align: right;
+                color: #6b7280;
+                flex-shrink: 0;
+            }
+            .music-track-main {
+                flex: 1;
+                min-width: 0;
+            }
+            .music-track-title {
+                color: #e5e7eb;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .music-track-meta {
+                font-size: 11px;
+                color: #6b7280;
+                margin-top: 1px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 1. Far Left Nav (Dark) -->
+        <nav class="main-nav">
+            <div class="nav-top">
+                <div class="user-avatar-small" id="userInfoBtn" {% if user_avatar %}style="background-image: url('{{ user_avatar }}'); background-size: cover; background-position: center; color: transparent;"{% endif %}>{{ username[0] | upper }}</div>
+                <div class="nav-item active"><i class="fa-solid fa-comment-dots"></i></div>
+                <div class="nav-item" id="friendListBtn"><i class="fa-solid fa-user-group"></i></div>
+                <div class="nav-item" id="musicNavBtn"><i class="fa-solid fa-box-archive"></i></div>
+                <div class="nav-item"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="nav-item" id="soundSettingsBtn" title="声音设置"><i class="fa-solid fa-chart-pie"></i></div>
+            </div>
+            <div class="nav-bottom">
+                <div class="nav-item" id="logoutNav" title="退出当前账号">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 2. Middle Left List (Recent Chats) -->
+        <aside class="chat-list-panel">
+            <div class="search-bar">
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="搜索" class="search-input" id="searchInput">
+                </div>
+                <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="search-dropdown" id="searchDropdown"></div>
+            
+            <div class="recent-chats" id="recentChats">
+                {% if dms %}
+                <div class="list-section-title" style="padding: 10px 15px; font-size: 12px; color: #999; font-weight: bold;">私信</div>
+                {% for room in dms %}
+                <div class="chat-item {% if room.name == room_name %}active{% endif %}" data-room="{{ room.name }}">
+                    <div class="chat-avatar dm-avatar" data-room="{{ room.display_name }}">{{ room.display_name[0] | upper }}</div>
+                    <div class="chat-info">
+                        <div class="chat-name-row">
+                            <span class="chat-name">{{ room.display_name }}</span>
+                            <div class="chat-name-right">
+                                <span class="chat-time">{{ room.last_time }}</span>
+                                {% if room.unread_count > 0 %}
+                                <span class="unread-badge">{{ room.unread_count }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="chat-preview">
+                            {{ room.last_content or '' }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if groups %}
+                <div class="list-section-title" style="padding: 10px 15px; font-size: 12px; color: #999; font-weight: bold;">群聊</div>
+                {% for room in groups %}
+                <div class="chat-item {% if room.name == room_name %}active{% endif %}" data-room="{{ room.name }}">
+                    <div class="chat-avatar group-avatar" data-room="{{ room.name }}">{{ room.name[0] }}</div>
+                    <div class="chat-info">
+                        <div class="chat-name-row">
+                            <div class="chat-name-left">
+                                <span class="chat-name">{{ room.name }}</span>
+                                {% if room.is_owner %}
+                                <span class="chat-tag chat-tag-me">我建</span>
+                                {% else %}
+                                <span class="chat-tag chat-tag-joined">加入</span>
+                                {% endif %}
+                            </div>
+                            <div class="chat-name-right">
+                                <span class="chat-time">{{ room.last_time }}</span>
+                                {% if room.unread_count > 0 %}
+                                <span class="unread-badge">{{ room.unread_count }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="chat-preview">
+                            {{ room.last_content or '' }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            <div class="music-player-panel">
+                <div class="music-player-header">
+                    <span class="music-player-title">音乐播放器</span>
+                    <div class="music-header-actions">
+                        <button class="music-header-btn" id="musicToggleBtn" title="最小化/展开">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <button class="music-upload-btn" id="musicUploadBtn" title="添加到播放列表">
+                            <i class="fa-solid fa-upload"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="musicFileInput" accept="audio/*" multiple style="display:none">
+                </div>
+                <div class="music-player-body">
+                    <div class="music-track-name" id="musicTrackName">未选择文件</div>
+                    <div class="music-controls">
+                        <button class="music-control-btn" id="musicPlayPauseBtn" disabled>
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                        <div class="music-time" id="musicTime">00:00 / 00:00</div>
+                    </div>
+                    <div class="music-progress-bar" id="musicProgressBar">
+                        <div class="music-progress-inner" id="musicProgressInner"></div>
+                    </div>
+                    <div class="music-extra">
+                        <div class="music-volume">
+                            <i class="fa-solid fa-volume-high" id="musicVolumeIcon"></i>
+                            <input type="range" id="musicVolumeSlider" min="0" max="100" value="70">
+                        </div>
+                        <div class="music-playlist" id="musicPlaylist"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 3. Main Chat Area -->
+        <main class="chat-window {% if is_private %}private-mode{% endif %}" style="position: relative;">
+            {% if room_is_banned %}
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); color: white; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column;">
+                <div style="font-size: 48px; margin-bottom: 20px;"><i class="fa-solid fa-ban"></i></div>
+                <div style="font-size: 24px; font-weight: bold;">该房间已被封禁</div>
+                <div style="font-size: 16px; margin-top: 10px; color: #ccc;">请联系管理员解封后继续使用</div>
+            </div>
+            {% endif %}
+            <header class="chat-header">
+                <div class="header-title">
+                    <h2>{{ room_display_name }}</h2>
+                    {% if not is_private %}
+                    <span class="member-count">(<span id="memberCount">1</span>)</span>
+                    {% endif %}
+                </div>
+                <div class="header-actions">
+                    {% if not is_private %}
+                    <i class="fa-solid fa-user-group" id="onlineUsersBtn" title="在线用户"></i>
+                    {% endif %}
+                    <i class="fa-solid fa-phone" title="语音通话"></i>
+                    <i class="fa-solid fa-video" title="视频通话"></i>
+                    <i class="fa-solid fa-desktop" title="屏幕共享"></i>
+                    {% if is_private %}
+                    <i class="fa-solid fa-ellipsis" id="privateSettingsBtn" title="设置"></i>
+                    {% endif %}
+                </div>
+            </header>
+
+            <div class="chat-messages" id="chatMessages">
+                {% if is_private %}
+                <div class="system-message">与 {{ room_display_name }} 开始聊天</div>
+                {% else %}
+                <div class="system-message">欢迎来到萱聊！请文明发言。</div>
+                {% endif %}
+            </div>
+
+            <div class="chat-input-area">
+                <div class="toolbar">
+                    <i class="fa-regular fa-face-smile" id="emojiToggle" title="表情"></i>
+                    <i class="fa-solid fa-scissors" title="截图"></i>
+                    <i class="fa-regular fa-folder" title="发送文件"></i>
+                    <i class="fa-regular fa-image" title="发送图片"></i>
+                    <i class="fa-solid fa-mobile-screen" title="发送到手机"></i>
+                </div>
+                <div class="input-actions">
+                    <div class="input-shell">
+                        <textarea class="chat-input" id="messageInput" placeholder="请输入内容..."></textarea>
+                    </div>
+                    <div class="input-footer">
+                        <div class="input-hint">回车发送，换行按住上档键再回车</div>
+                        <button class="btn-send" id="sendBtn" disabled>发送</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 4. Right Info Panel (Only for Groups) -->
+        {% if not is_private %}
+        <aside class="room-info-panel collapsed">
+            <div class="panel-section">
+                <div class="member-grid" id="memberGrid">
+                    <!-- Members will be injected here -->
+                    <div class="member-item add-btn">
+                        <div class="member-avatar"><i class="fa-solid fa-plus"></i></div>
+                        <div class="member-name">添加</div>
+                    </div>
+                </div>
+                <div class="view-more">查看更多群成员 <i class="fa-solid fa-chevron-down"></i></div>
+            </div>
+            
+            <div class="panel-section info-list">
+                <div class="info-item">
+                    <label>群聊名称</label>
+                    <div class="info-value">{{ room_name }}</div>
+                </div>
+                {% if not is_private and room_code %}
+                <div class="info-item">
+                    <label>房间号</label>
+                    <div class="info-value" id="roomCodeValue">{{ room_code }}</div>
+                </div>
+                {% endif %}
+        <div class="info-item">
+                    <label>群公告</label>
+                    <div class="info-value" id="roomAnnouncementValue">
+                        {{ room_announcement or '暂无群公告' }}
+                    </div>
+                </div>
+                <div class="info-item" id="joinRequestsSection" style="display:none;">
+                    <label>入群申请</label>
+                    <div class="info-value" id="joinRequestsList"></div>
+                </div>
+                <div class="info-item">
+                    <label>备注</label>
+                    <div class="info-value">群聊的备注仅自己可见</div>
+                </div>
+                <div class="info-item">
+                    <label>我在本群的昵称</label>
+                    <div class="info-value">{{ username }}</div>
+                </div>
+            </div>
+            
+            <div class="panel-section settings-list">
+                <div class="setting-item">
+                    <span>显示群成员昵称</span>
+                    <div class="toggle-switch active"></div>
+                </div>
+                <div class="setting-item">
+                    <span>消息免打扰</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="setting-item">
+                    <span>置顶聊天</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="setting-item">
+                    <span>保存到通讯录</span>
+                    <div class="toggle-switch active"></div>
+                </div>
+            </div>
+            
+            <div class="panel-footer">
+                <a href="/" class="btn-quit">退出登录</a>
+            </div>
+        </aside>
+        {% endif %}
+    </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <aside class="online-drawer" id="onlineDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title">在线用户 <span class="drawer-count">(<span id="onlineUserCount">0</span>)</span></div>
+            <button type="button" class="drawer-close" id="closeDrawerBtn" title="关闭"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-body">
+            <div class="online-user-list" id="onlineUserList"></div>
+        </div>
+    </aside>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <div class="settings-title">声音设置</div>
+            <button type="button" class="settings-close" id="closeSettingsBtn" title="关闭">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-row">
+                <span>静音</span>
+                <div class="toggle-switch" data-key="master"></div>
+            </div>
+            <div class="settings-row">
+                <span>新消息提示音</span>
+                <div class="toggle-switch" data-key="msg"></div>
+            </div>
+            <div class="settings-row">
+                <span>用户上线提示音</span>
+                <div class="toggle-switch" data-key="join"></div>
+            </div>
+            <div class="settings-row">
+                <span>自己发消息提示音</span>
+                <div class="toggle-switch" data-key="self"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-info-modal" id="userInfoModal">
+        <div class="user-info-header">
+            <div class="user-info-title">我的资料</div>
+            <button type="button" class="user-info-close" id="closeUserInfoBtn" title="关闭">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="user-info-body">
+            <div class="user-profile-section">
+                <div class="user-avatar-upload" id="avatarUploadBtn">
+                    <div class="user-avatar-small" id="modalAvatar" style="width:100%; height:100%; font-size:24px; margin:0;">
+                        {{ username[0] | upper }}
+                    </div>
+                    <div class="avatar-overlay">
+                        <i class="fa-solid fa-camera"></i>
+                        <span>更换头像</span>
+                    </div>
+                </div>
+                <div style="margin-top:10px; font-weight:600; font-size:16px;">{{ username }}</div>
+            </div>
+
+            <div class="user-info-tabs">
+                <div class="tab-item active" data-tab="basic">基本资料</div>
+                <div class="tab-item" data-tab="security">账号安全</div>
+            </div>
+
+            <div class="tab-content active" id="tab-basic">
+                <div class="form-group">
+                    <label>昵称</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="editNicknameInput" value="{{ username }}">
+                        <button class="btn-primary" id="saveNicknameBtn" style="width:auto; margin-left:10px; padding:0 15px;">保存</button>
+                    </div>
+                </div>
+                <div class="user-info-row">
+                    <span class="user-info-label">注册时间</span>
+                    <span class="user-info-value" id="infoRegisterTime"></span>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-security">
+                <div class="form-group">
+                    <label>原密码</label>
+                    <input type="password" class="form-control" id="oldPasswordInput" placeholder="请输入当前密码">
+                </div>
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" class="form-control" id="newPasswordInput" placeholder="请输入新密码">
+                </div>
+                <div class="form-group">
+                    <label>确认新密码</label>
+                    <input type="password" class="form-control" id="confirmPasswordInput" placeholder="请再次输入新密码">
+                </div>
+                <button class="btn-primary mt-2" id="savePasswordBtn">修改密码</button>
+            </div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+    </div>
+
+    <div class="modal-overlay" id="announcementModal">
+        <div class="custom-modal">
+            <div class="modal-title">编辑群公告</div>
+            <div class="modal-body">
+                <textarea id="announcementInput" class="chat-input" style="border:1px solid #ddd; padding:8px; border-radius:6px; min-height:80px;"></textarea>
+                <div id="announcementResult" style="margin-top:10px; font-size:13px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeAnnouncementBtn">取消</button>
+                <button class="btn-primary" id="saveAnnouncementBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Friend Drawer -->
+    <aside class="friend-drawer" id="friendDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title">好友列表</div>
+            <button type="button" class="drawer-close" id="closeFriendDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="friend-tabs">
+            <div class="friend-tab active" data-tab="friends">好友</div>
+            <div class="friend-tab" data-tab="requests">新朋友 <span id="requestCountBadge" style="display:none; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></div>
+            <div class="friend-tab" data-tab="blocked">黑名单</div>
+        </div>
+        <div class="friend-list-container" id="friendListContainer">
+            <!-- Friend items here -->
+        </div>
+        <div class="friend-list-container" id="requestListContainer" style="display:none;">
+            <!-- Request items here -->
+        </div>
+        <div class="friend-list-container" id="blockedListContainer" style="display:none;">
+        </div>
+    </aside>
+
+    <!-- Add Friend Modal -->
+    <div class="modal-overlay" id="addFriendModal">
+        <div class="custom-modal">
+            <div class="modal-title">添加好友 / 加入群聊</div>
+            <div class="modal-body">
+                <div style="margin-bottom:8px; font-size:13px; color:#555;">
+                    <label style="margin-right:12px;">
+                        <input type="radio" name="addType" value="friend" checked> 添加好友
+                    </label>
+                    <label style="margin-right:12px;">
+                        <input type="radio" name="addType" value="room"> 加入/创建群聊
+                    </label>
+                    <label style="margin-right:12px;">
+                        <input type="radio" name="addType" value="room_apply"> 申请加入群聊
+                    </label>
+                    <label style="margin-right:0;">
+                        <input type="radio" name="addType" value="room_code"> 通过房间号加入群聊
+                    </label>
+                </div>
+                <input type="text" id="addFriendInput" class="chat-input" placeholder="输入用户名或房间号" style="border:1px solid #ddd; padding:8px; border-radius:6px; min-height:36px;">
+                <div id="addFriendResult" style="margin-top:10px; font-size:13px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeAddFriendBtn">取消</button>
+                <button class="btn-primary" id="confirmAddFriendBtn">确定</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="inviteFriendModal">
+        <div class="custom-modal">
+            <div class="modal-title">邀请好友进群</div>
+            <div class="modal-body">
+                <div id="inviteFriendList" style="max-height:260px; overflow-y:auto;"></div>
+                <div id="inviteFriendResult" style="margin-top:10px; font-size:13px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeInviteFriendBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="newsDetailModal">
+        <div class="custom-modal news-detail-modal">
+            <div class="modal-title" id="newsDetailTitle"></div>
+            <div class="modal-body">
+                <div id="newsDetailMeta" style="font-size:12px; color:#6b7280; margin-bottom:8px;"></div>
+                <div id="newsDetailContent" style="font-size:13px; line-height:1.6;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeNewsDetailBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="emojiPanel" class="emoji-panel"></div>
+
+    <audio id="sndMsgComing" preload="auto" src="{{ url_for('static', filename='mp3/msgcoming.mp3') }}"></audio>
+    <audio id="sndUserComing" preload="auto" src="{{ url_for('static', filename='mp3/usercoming.mp3') }}"></audio>
+    <audio id="sndUserSend" preload="auto" src="{{ url_for('static', filename='mp3/usersendmsg.mp3') }}"></audio>
+    <audio id="musicAudio"></audio>
+
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.5.1.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            const username = "{{ username }}";
+            const roomName = "{{ room_name }}";
+            const roomDisplayName = "{{ room_display_name }}";
+            const isPrivate = JSON.parse('{{ is_private|tojson }}');
+            let blockedUsers = [];
+            try {
+                blockedUsers = JSON.parse('{{ blocked_users|tojson }}') || [];
+            } catch (e) {
+                blockedUsers = [];
+            }
+            
+            let ws = null;
+            const isRoomBanned = "{{ room_is_banned|tojson }}" === "true";
+            const isRoomUserBanned = "{{ room_user_banned|tojson }}" === "true";
+            const isRoomOwner = JSON.parse('{{ is_room_owner|tojson }}');
+            const isRoomManager = JSON.parse('{{ is_room_manager|tojson }}');
+            const wsServerUrl = JSON.parse('{{ ws_server_url|tojson }}');
+            
+            if (!isRoomBanned && !isRoomUserBanned) {
+                if (wsServerUrl) {
+                    ws = new WebSocket(wsServerUrl);
+                } else {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    ws = new WebSocket(protocol + '//' + window.location.host + '/ws');
+                }
+            }
+
+            const $drawer = $('#onlineDrawer');
+            const $drawerBackdrop = $('#drawerBackdrop');
+            const $onlineUsersBtn = $('#onlineUsersBtn');
+            const $roomInfoPanel = $('.room-info-panel');
+            const $settingsBtn = $('#soundSettingsBtn');
+            const $settingsPanel = $('#settingsPanel');
+            const $userInfoBtn = $('#userInfoBtn');
+            const $userInfoModal = $('#userInfoModal');
+            const $emojiToggle = $('#emojiToggle');
+            const $messageInput = $('#messageInput');
+            const $musicPanel = $('.music-player-panel');
+            const $musicNavBtn = $('#musicNavBtn');
+            const audioEl = document.getElementById('musicAudio');
+            const $musicFileInput = $('#musicFileInput');
+            const $musicUploadBtn = $('#musicUploadBtn');
+            const $musicPlayPauseBtn = $('#musicPlayPauseBtn');
+            const $musicTrackName = $('#musicTrackName');
+            const $musicTime = $('#musicTime');
+            const $musicProgressBar = $('#musicProgressBar');
+            const $musicProgressInner = $('#musicProgressInner');
+            const $musicToggleBtn = $('#musicToggleBtn');
+            const $musicVolumeSlider = $('#musicVolumeSlider');
+
+            $('#recentChats .chat-avatar').each(function() {
+                const $avatar = $(this);
+                const name = ($avatar.data('room') || $avatar.text() || '').toString();
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+                    hash |= 0;
+                }
+                const idx = Math.abs(hash) % 6;
+                $avatar.addClass('avatar-color-' + idx);
+            });
+
+            let isNavigating = false;
+
+            $('.recent-chats').on('click', '.chat-item', function() {
+                if (isNavigating) return;
+                const targetRoom = $(this).data('room');
+                if (!targetRoom || targetRoom === roomName) return;
+                
+                // Preserve ws_server parameter if present
+                const urlParams = new URLSearchParams(window.location.search);
+                const wsServer = urlParams.get('ws_server');
+                
+                let url = '/chat?username=' + encodeURIComponent(username) + '&room=' + encodeURIComponent(targetRoom);
+                if (wsServer && /^\d+$/.test(wsServer)) {
+                    url += '&ws_server=' + encodeURIComponent(wsServer);
+                }
+                
+                isNavigating = true;
+                window.location.href = url;
+            });
+
+            // Removed deprecated window.prompt handler for .btn-add
+            // The new handler is defined below in "Friend System Logic"
+
+            const defaultSoundSettings = {
+                master: false,
+                msg: true,
+                join: true,
+                self: true
+            };
+
+            let soundSettings = loadSoundSettings();
+
+            const sndMsgComing = document.getElementById('sndMsgComing');
+            const sndUserComing = document.getElementById('sndUserComing');
+            const sndUserSend = document.getElementById('sndUserSend');
+
+            if (ws) {
+                ws.onopen = function() {
+                    ws.send(JSON.stringify({
+                        type: 'join',
+                        username: username,
+                        room: roomName
+                    }));
+                };
+
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'message') {
+                        const isSelf = data.username === username;
+                        if (!isSelf && data.username && blockedUsers.indexOf(data.username) !== -1) {
+                            return;
+                        }
+                        if (isSelf) {
+                            playSound('self');
+                        } else {
+                            playSound('msg');
+                        }
+                        appendMessage(data);
+                    } else if (data.type === 'weather_card') {
+                        appendWeatherCard(data);
+                    } else if (data.type === 'movie_card') {
+                        appendMovieCard(data);
+                    } else if (data.type === 'news_card') {
+                        appendNewsCard(data);
+                    } else if (data.type === 'music_card') {
+                        appendMusicCard(data);
+                    } else if (data.type === 'ai_message_start') {
+                        appendAiMessageStart(data);
+                    } else if (data.type === 'ai_message_chunk') {
+                        appendAiMessageChunk(data);
+                    } else if (data.type === 'ai_message_end') {
+                        endAiMessage(data);
+                    } else if (data.type === 'system') {
+                        if (data.content && data.content.indexOf('加入了群聊') !== -1) {
+                            playSound('join');
+                        }
+                        appendSystemMessage(data.content);
+                    } else if (data.type === 'user_list') {
+                        currentOnlineUsers = (data.users || []);
+                        updateUserList(currentOnlineUsers);
+                    } else if (data.type === 'history') {
+                        if (Array.isArray(data.messages)) {
+                            let firstUnreadId = null;
+                            let unreadFound = false;
+                            
+                            data.messages.forEach(function(msg) {
+                                if (msg.username && msg.username !== username && blockedUsers.indexOf(msg.username) !== -1) {
+                                    return;
+                                }
+                                if (!unreadFound && msg.is_unread) {
+                                    unreadFound = true;
+                                    firstUnreadId = msg.id;
+                                    $('#chatMessages').append('<div class="unread-separator" id="unreadSeparator">以下是未读消息</div>');
+                                }
+                                appendMessage(msg, true);
+                            });
+                            
+                            if (unreadFound) {
+                                const $separator = $('#unreadSeparator');
+                                if ($separator.length) {
+                                    $separator[0].scrollIntoView({block: "center", behavior: "smooth"});
+                                }
+                                $.ajax({
+                                    url: '/api/mark_read',
+                                    method: 'POST',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({
+                                        username: username,
+                                        room_name: roomName
+                                    })
+                                });
+                            } else {
+                                scrollToBottom();
+                            }
+                        }
+                    }
+                };
+
+                ws.onclose = function() {
+                    appendSystemMessage('连接已断开');
+                };
+            }
+
+            function appendWeatherCard(data) {
+                const isSelf = data.username === username;
+                const alignmentClass = isSelf ? 'message-right' : 'message-left';
+                
+                const rawData = data.data || {};
+                
+                // Smart extraction
+                let weatherInfo = rawData;
+                if (rawData.data && typeof rawData.data === 'object' && !Array.isArray(rawData.data)) {
+                    weatherInfo = rawData.data;
+                }
+                
+                // --- Background Logic ---
+                let bgClass = 'weather-bg-sunny'; // Default
+                const weatherText = (weatherInfo.weather || '').toString();
+                
+                if (weatherText.includes('雨')) bgClass = 'weather-bg-rain';
+                else if (weatherText.includes('阴') || weatherText.includes('云')) bgClass = 'weather-bg-cloudy';
+                else if (weatherText.includes('霾') || weatherText.includes('雾')) bgClass = 'weather-bg-haze';
+                
+                // --- Icon Logic ---
+                let iconClass = 'fa-sun';
+                if (weatherText.includes('雨')) iconClass = 'fa-cloud-rain';
+                else if (weatherText.includes('云') || weatherText.includes('阴')) iconClass = 'fa-cloud';
+                else if (weatherText.includes('雪')) iconClass = 'fa-snowflake';
+                else if (weatherText.includes('雷')) iconClass = 'fa-bolt';
+                else if (weatherText.includes('霾') || weatherText.includes('雾')) iconClass = 'fa-smog';
+                
+                // --- Data Extraction ---
+                const location = data.location || weatherInfo.city || '未知城市';
+                
+                // Temp
+                let temp = weatherInfo.temp || 'N/A';
+                temp = String(temp).replace('°C', '').replace('°', '');
+                
+                // Range (High/Low)
+                // Priority: max/min from root -> max/min from days[0] -> temp/tempn
+                let high = weatherInfo.max;
+                if (!high && weatherInfo.days && weatherInfo.days[0]) high = weatherInfo.days[0].max;
+                if (!high) high = weatherInfo.temp; // Fallback
+
+                let low = weatherInfo.min || weatherInfo.tempn;
+                if (!low && weatherInfo.days && weatherInfo.days[0]) low = weatherInfo.days[0].min;
+                
+                // Condition
+                let desc = weatherInfo.weather || '未知';
+                
+                // AQI
+                let aqi = weatherInfo.air || weatherInfo.aqi || weatherInfo.air_pm25;
+                let aqiText = '';
+                if (aqi) {
+                    const aqiNum = parseInt(aqi);
+                    if (aqiNum <= 50) aqiText = '空气优';
+                    else if (aqiNum <= 100) aqiText = '空气良';
+                    else if (aqiNum <= 150) aqiText = '轻度污染';
+                    else aqiText = '污染';
+                }
+                
+                // Details
+                let humidity = weatherInfo.humidity || '-';
+                if (String(humidity).indexOf('%') === -1) humidity += '%';
+                
+                let wind = weatherInfo.wind || '-';
+                // Clean wind
+                if (wind.length > 5) wind = wind.substring(0, 4); 
+
+                let windSpeed = weatherInfo.windSpeed || '';
+                
+                // Warning
+                let warningHtml = '';
+                if (weatherInfo.warning && weatherInfo.warning.warning) {
+                    warningHtml = `<div class="weather-warning"><i class="fa-solid fa-triangle-exclamation"></i> ${weatherInfo.warning.warning.substring(0, 30)}...</div>`;
+                }
+
+                const html = `
+                    <div class="message-row ${alignmentClass}">
+                        <div class="message-avatar">${data.username ? data.username[0] : '?'}</div>
+                        <div class="message-content">
+                            <div class="message-sender">${data.username || 'System'}</div>
+                            <div class="weather-card ${bgClass}">
+                                <div class="weather-header">
+                                    <div class="weather-location">
+                                        <i class="fa-solid fa-location-dot"></i> ${location}
+                                    </div>
+                                </div>
+                                
+                                <div class="weather-main">
+                                    <div class="weather-temp">${Math.round(parseFloat(temp) || 0)}<span class="weather-unit">°</span></div>
+                                    <div class="weather-range">${high ? high + ' / ' : ''}${low ? low + '°C' : ''}</div>
+                                    <div class="weather-condition">
+                                        <i class="fa-solid ${iconClass}"></i> ${desc} ${aqiText ? `<span class="weather-badge">${aqiText}</span>` : ''}
+                                    </div>
+                                </div>
+                                
+                                ${warningHtml}
+
+                                <div class="weather-details-grid">
+                                    <div class="weather-detail-item">
+                                        <span class="weather-detail-label">湿度</span>
+                                        <span class="weather-detail-value">${humidity}</span>
+                                    </div>
+                                    <div class="weather-detail-item">
+                                        <span class="weather-detail-label">风向</span>
+                                        <span class="weather-detail-value">${wind}</span>
+                                    </div>
+                                    <div class="weather-detail-item">
+                                        <span class="weather-detail-label">空气</span>
+                                        <span class="weather-detail-value">${aqi || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+
+            function loadSoundSettings() {
+                try {
+                    const raw = localStorage.getItem('xuanliao_sound_settings');
+                    if (!raw) return Object.assign({}, defaultSoundSettings);
+                    const parsed = JSON.parse(raw);
+                    return Object.assign({}, defaultSoundSettings, parsed || {});
+                } catch (e) {
+                    return Object.assign({}, defaultSoundSettings);
+                }
+            }
+
+            function saveSoundSettings() {
+                try {
+                    localStorage.setItem('xuanliao_sound_settings', JSON.stringify(soundSettings));
+                } catch (e) {}
+            }
+
+            function applySoundSettingsToUI() {
+                Object.keys(defaultSoundSettings).forEach(function(key) {
+                    const on = !!soundSettings[key];
+                    const el = $settingsPanel.find('.toggle-switch[data-key="' + key + '"]');
+                    if (on) {
+                        el.addClass('active');
+                    } else {
+                        el.removeClass('active');
+                    }
+                });
+            }
+
+            function playSound(type) {
+                if (soundSettings.master) return;
+                let audio = null;
+                if (type === 'msg' && soundSettings.msg) audio = sndMsgComing;
+                if (type === 'join' && soundSettings.join) audio = sndUserComing;
+                if (type === 'self' && soundSettings.self) audio = sndUserSend;
+                if (!audio) return;
+                try {
+                    audio.currentTime = 0;
+                    audio.play().catch(function() {});
+                } catch (e) {}
+            }
+
+            function updateBackdropState() {
+                const hasOpenDrawer = $drawer.hasClass('open');
+                const hasFriendDrawer = $('#friendDrawer').hasClass('open');
+                const hasOpenSettings = $settingsPanel.hasClass('open');
+                const hasOpenUserInfo = $userInfoModal.hasClass('open');
+                if (hasOpenDrawer || hasFriendDrawer || hasOpenSettings || hasOpenUserInfo) {
+                    $drawerBackdrop.addClass('open');
+                } else {
+                    $drawerBackdrop.removeClass('open');
+                }
+            }
+
+            function openDrawer() {
+                $drawer.addClass('open');
+                $onlineUsersBtn.addClass('active');
+                updateBackdropState();
+            }
+
+            function closeDrawer() {
+                $drawer.removeClass('open');
+                $onlineUsersBtn.removeClass('active');
+                updateBackdropState();
+            }
+
+            $onlineUsersBtn.on('click', function() {
+                const collapsed = $roomInfoPanel.hasClass('collapsed');
+                if (collapsed) {
+                    $roomInfoPanel.removeClass('collapsed');
+                    if (!$drawer.hasClass('open')) {
+                        openDrawer();
+                    } else {
+                        $onlineUsersBtn.addClass('active');
+                        updateBackdropState();
+                    }
+                } else {
+                    $roomInfoPanel.addClass('collapsed');
+                    if ($drawer.hasClass('open')) {
+                        closeDrawer();
+                    } else {
+                        $onlineUsersBtn.removeClass('active');
+                        updateBackdropState();
+                    }
+                }
+            });
+
+            $('#closeDrawerBtn').on('click', closeDrawer);
+            $drawerBackdrop.on('click', function() {
+                closeDrawer();
+                $('#friendDrawer').removeClass('open');
+                closeSettings();
+                closeUserInfo();
+                updateBackdropState();
+            });
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDrawer();
+                    $('#friendDrawer').removeClass('open');
+                    closeSettings();
+                    closeUserInfo();
+                    updateBackdropState();
+                }
+            });
+
+            function openSettings() {
+                $settingsPanel.addClass('open');
+                $settingsBtn.addClass('active');
+                updateBackdropState();
+            }
+
+            function closeSettings() {
+                $settingsPanel.removeClass('open');
+                $settingsBtn.removeClass('active');
+                updateBackdropState();
+            }
+
+            $('#closeNewsDetailBtn').on('click', function() {
+                $('#newsDetailModal').removeClass('open');
+            });
+
+            $('#newsDetailModal').on('click', function(e) {
+                if (e.target === this) {
+                    $('#newsDetailModal').removeClass('open');
+                }
+            });
+
+            $settingsBtn.on('click', function() {
+                if ($settingsPanel.hasClass('open')) {
+                    closeSettings();
+                } else {
+                    openSettings();
+                }
+            });
+
+            $('#closeSettingsBtn').on('click', closeSettings);
+
+            $settingsPanel.on('click', '.toggle-switch', function() {
+                const key = $(this).data('key');
+                if (!key || !(key in soundSettings)) return;
+                soundSettings[key] = !soundSettings[key];
+                
+                if (key === 'master' && soundSettings.master) {
+                    soundSettings.msg = false;
+                    soundSettings.join = false;
+                    soundSettings.self = false;
+                }
+                
+                applySoundSettingsToUI();
+                saveSoundSettings();
+            });
+
+            $('#logoutNav').on('click', function() {
+                try {
+                    if (ws) ws.close();
+                } catch (e) {}
+                window.location.href = '/';
+            });
+
+            applySoundSettingsToUI();
+
+            function loadUserProfile() {
+                const key = 'xuanliao_profile_' + username;
+                let profile = null;
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        profile = JSON.parse(raw) || null;
+                    }
+                } catch (e) {
+                    profile = null;
+                }
+                return profile;
+            }
+
+            function openUserInfo() {
+                const profile = loadUserProfile();
+                const now = new Date();
+                const nowStr = now.toLocaleString();
+                const nickname = username || '';
+                const registerTime = profile && profile.registeredAt ? profile.registeredAt : '未记录';
+
+                // Reset Tabs
+                $('.tab-item').removeClass('active');
+                $('[data-tab="basic"]').addClass('active');
+                $('.tab-content').removeClass('active');
+                $('#tab-basic').addClass('active');
+
+                // Reset Inputs
+                $('#editNicknameInput').val(nickname);
+                $('#oldPasswordInput').val('');
+                $('#newPasswordInput').val('');
+                $('#confirmPasswordInput').val('');
+                
+                $('#infoRegisterTime').text(registerTime);
+
+                $userInfoModal.addClass('open');
+                updateBackdropState();
+            }
+
+            // Tab Switching
+            $('.tab-item').on('click', function() {
+                const tab = $(this).data('tab');
+                $('.tab-item').removeClass('active');
+                $(this).addClass('active');
+                $('.tab-content').removeClass('active');
+                $('#tab-' + tab).addClass('active');
+            });
+
+            // Avatar Upload Trigger
+            $('#avatarUploadBtn').on('click', function() {
+                $('#avatarFileInput').click();
+            });
+
+            // Avatar File Selected
+            $('#avatarFileInput').on('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('avatar', file);
+
+                // Preview immediately
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#modalAvatar').text('').css('background-image', 'url(' + e.target.result + ')');
+                };
+                reader.readAsDataURL(file);
+
+                $.ajax({
+                    url: '/api/user/upload_avatar',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            // Update the main nav avatar too
+                            $('#userInfoBtn').text('').css('background-image', 'url(' + data.avatar_url + ')').css('background-size', 'cover').css('background-position', 'center');
+                            alert('头像上传成功');
+                        } else {
+                            alert(data.msg || '上传失败');
+                        }
+                    },
+                    error: function() {
+                        alert('上传出错，请重试');
+                    }
+                });
+            });
+
+            // Save Nickname
+            $('#saveNicknameBtn').on('click', function() {
+                const newNickname = $('#editNicknameInput').val().trim();
+                if (!newNickname) return;
+
+                $.ajax({
+                    url: '/api/user/update_nickname',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        new_nickname: newNickname
+                    }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            alert('昵称修改成功，刷新页面生效');
+                            location.reload(); 
+                        } else {
+                            alert(data.msg || '修改失败');
+                        }
+                    },
+                    error: function() {
+                        alert('请求出错');
+                    }
+                });
+            });
+
+            // Save Password
+            $('#savePasswordBtn').on('click', function() {
+                const oldPass = $('#oldPasswordInput').val();
+                const newPass = $('#newPasswordInput').val();
+                const confirmPass = $('#confirmPasswordInput').val();
+
+                if (!oldPass || !newPass || !confirmPass) {
+                    alert('请填写所有密码字段');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    alert('两次输入的新密码不一致');
+                    return;
+                }
+                if (newPass.length < 6) {
+                    alert('新密码长度不能少于6位');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/user/update_password',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        old_password: oldPass,
+                        new_password: newPass
+                    }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            alert('密码修改成功，请重新登录');
+                            window.location.href = '/';
+                        } else {
+                            alert(data.msg || '修改失败');
+                        }
+                    },
+                    error: function() {
+                        alert('请求出错');
+                    }
+                });
+            });
+
+            function closeUserInfo() {
+                $userInfoModal.removeClass('open');
+                updateBackdropState();
+            }
+
+            $userInfoBtn.on('click', openUserInfo);
+            $('#closeUserInfoBtn').on('click', closeUserInfo);
+
+            const emojiGroups = [
+                '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚',
+                '😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣',
+                '😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗',
+                '🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😮‍💨 😮 😯 😲 🥱 😴 🤤 😪 😵 😵‍💫 🤐',
+                '❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💔 💖 💘 💝 💞 💕 💓 💗 💟 ❣️ 💌'
+            ];
+
+            // Event delegation for emoji clicks (handles both static and dynamic)
+            $(document).on('click', '.emoji-item', function(e) {
+                e.preventDefault();
+                const emoji = $(this).text();
+                insertAtCursor(emoji);
+            });
+
+            function ensureEmojiPanel() {
+                let panel = document.getElementById('emojiPanel');
+                if (!panel) {
+                    panel = document.createElement('div');
+                    panel.id = 'emojiPanel';
+                    panel.className = 'emoji-panel';
+                    document.body.appendChild(panel);
+                }
+                
+                // Populate if empty
+                if (panel.children.length === 0) {
+                    emojiGroups.forEach(function(group) {
+                        const row = document.createElement('div');
+                        row.className = 'emoji-row';
+                        group.split(' ').forEach(function(ch) {
+                            if (!ch) return;
+                            const span = document.createElement('span');
+                            span.className = 'emoji-item';
+                            span.textContent = ch;
+                            row.appendChild(span);
+                        });
+                        panel.appendChild(row);
+                    });
+                }
+                return panel;
+            }
+
+            function insertAtCursor(text) {
+                const el = $messageInput.get(0);
+                if (!el) return;
+                el.focus();
+                const start = el.selectionStart || 0;
+                const end = el.selectionEnd || 0;
+                const value = el.value;
+                el.value = value.slice(0, start) + text + value.slice(end);
+                const newPos = start + text.length;
+                el.selectionStart = el.selectionEnd = newPos;
+                $('#messageInput').trigger('input');
+            }
+
+            function openEmojiPanel() {
+                const panel = ensureEmojiPanel();
+                const rect = $emojiToggle.get(0).getBoundingClientRect();
+                panel.style.left = rect.left + 'px';
+                panel.style.top = (rect.top - panel.offsetHeight - 8) + 'px';
+                panel.classList.add('open');
+            }
+
+            function closeEmojiPanel() {
+                const panel = document.getElementById('emojiPanel');
+                if (!panel) return;
+                panel.classList.remove('open');
+            }
+
+            $emojiToggle.on('click', function(e) {
+                e.stopPropagation();
+                const panel = ensureEmojiPanel();
+                if (panel.classList.contains('open')) {
+                    closeEmojiPanel();
+                } else {
+                    openEmojiPanel();
+                }
+            });
+
+            $(document).on('click', function() {
+                closeEmojiPanel();
+            });
+
+            $('#messageInput').on('click focus', function() {
+                closeEmojiPanel();
+            });
+
+            let musicPlaylist = [];
+            let currentTrackIndex = -1;
+
+            function clearPlaylist() {
+                musicPlaylist.forEach(function(track) {
+                    if (track && track.url) {
+                        try {
+                            URL.revokeObjectURL(track.url);
+                        } catch (e) {}
+                    }
+                });
+                musicPlaylist = [];
+                currentTrackIndex = -1;
+            }
+
+            function formatTime(sec) {
+                if (!isFinite(sec)) return '00:00';
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60);
+                const mm = m < 10 ? '0' + m : '' + m;
+                const ss = s < 10 ? '0' + s : '' + s;
+                return mm + ':' + ss;
+            }
+
+            function updateMusicTime() {
+                if (!audioEl) return;
+                const cur = audioEl.currentTime || 0;
+                const dur = audioEl.duration || 0;
+                $musicTime.text(formatTime(cur) + ' / ' + formatTime(dur));
+                let ratio = 0;
+                if (dur > 0) {
+                    ratio = Math.min(1, Math.max(0, cur / dur));
+                }
+                $musicProgressInner.css('width', (ratio * 100) + '%');
+            }
+
+            function setPlayIcon(isPlaying) {
+                const $icon = $musicPlayPauseBtn.find('i');
+                if (isPlaying) {
+                    $icon.removeClass('fa-play').addClass('fa-pause');
+                } else {
+                    $icon.removeClass('fa-pause').addClass('fa-play');
+                }
+            }
+
+            function renderPlaylist() {
+                const $list = $('#musicPlaylist');
+                if (!$list.length) return;
+                $list.empty();
+                if (!musicPlaylist.length) {
+                    $list.append('<div class="music-playlist-empty">暂无播放列表</div>');
+                    return;
+                }
+                musicPlaylist.forEach(function(track, idx) {
+                    const isActive = idx === currentTrackIndex;
+                    const $item = $('<div class="music-playlist-item"></div>');
+                    if (isActive) {
+                        $item.addClass('active');
+                    }
+                    $item.attr('data-idx', idx);
+                    $item.text((idx + 1) + '. ' + (track.name || '本地音频'));
+                    $list.append($item);
+                });
+            }
+
+            function playTrackAtIndex(idx) {
+                if (!audioEl || !musicPlaylist.length) return;
+                if (idx < 0 || idx >= musicPlaylist.length) return;
+                currentTrackIndex = idx;
+                const track = musicPlaylist[idx];
+                if (!track || !track.url) return;
+                audioEl.src = track.url;
+                $musicTrackName.text(track.name || '本地音频');
+                $musicPlayPauseBtn.prop('disabled', false);
+                setPlayIcon(true);
+                renderPlaylist();
+                audioEl.play().catch(function() {
+                    setPlayIcon(false);
+                });
+            }
+
+            $musicUploadBtn.on('click', function() {
+                if ($musicFileInput.length) {
+                    $musicFileInput.trigger('click');
+                }
+            });
+
+            $musicFileInput.on('change', function() {
+                const files = this.files;
+                if (!files || !files.length || !audioEl) return;
+                clearPlaylist();
+                const arr = Array.prototype.slice.call(files);
+                arr.forEach(function(file, index) {
+                    const url = URL.createObjectURL(file);
+                    musicPlaylist.push({
+                        name: file.name || ('本地音频 ' + (index + 1)),
+                        url: url
+                    });
+                });
+                renderPlaylist();
+                if (musicPlaylist.length) {
+                    playTrackAtIndex(0);
+                }
+            });
+
+            if (audioEl) {
+                audioEl.addEventListener('timeupdate', updateMusicTime);
+                audioEl.addEventListener('loadedmetadata', updateMusicTime);
+                audioEl.addEventListener('error', function(e) {
+                    console.error('Audio load error:', e);
+                    const errorMsg = '播放失败: ' + (audioEl.error ? audioEl.error.message : '未知错误');
+                    
+                    // Attempt fallback if we have an ID
+                    const currentTrack = musicPlaylist[currentTrackIndex];
+                    if (currentTrack && currentTrack.id) {
+                         // Fallback Strategy: Proxy <-> Netease Outer
+                         
+                         const neteaseOuter = 'https://music.163.com/song/media/outer/url?id=' + currentTrack.id + '.mp3';
+                         const proxyIdUrl = '/api/music/proxy?id=' + currentTrack.id;
+                         
+                         let nextUrl = null;
+
+                         // If currently using Proxy, try Netease Outer as last resort
+                         if (currentTrack.url.indexOf('/api/music/proxy') !== -1) {
+                             if (currentTrack.url !== neteaseOuter) {
+                                 nextUrl = neteaseOuter;
+                             }
+                         } 
+                         // If not using Proxy, try Proxy first (most robust)
+                         else {
+                             if (currentTrack.url.indexOf(proxyIdUrl) === -1) {
+                                 nextUrl = proxyIdUrl;
+                             }
+                         }
+                         
+                         if (nextUrl) {
+                             console.log('Attempting fallback URL:', nextUrl);
+                             currentTrack.url = nextUrl;
+                             audioEl.src = nextUrl;
+                             audioEl.play().catch(function(err){ console.error('Fallback play error:', err); });
+                             return; // Don't show error yet
+                         }
+                    }
+                    
+                    $('#musicTrackName').text(errorMsg);
+                    setPlayIcon(false);
+                });
+                audioEl.addEventListener('ended', function() {
+                    if (musicPlaylist.length && currentTrackIndex >= 0 && currentTrackIndex < musicPlaylist.length - 1) {
+                        playTrackAtIndex(currentTrackIndex + 1);
+                    } else {
+                        setPlayIcon(false);
+                        updateMusicTime();
+                    }
+                });
+            }
+
+            $musicPlayPauseBtn.on('click', function() {
+                if (!audioEl || $musicPlayPauseBtn.prop('disabled')) return;
+                if (audioEl.paused) {
+                    audioEl.play().then(function() {
+                        setPlayIcon(true);
+                    }).catch(function() {});
+                } else {
+                    audioEl.pause();
+                    setPlayIcon(false);
+                }
+            });
+
+            $musicProgressBar.on('click', function(e) {
+                if (!audioEl || !isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const ratio = Math.min(1, Math.max(0, x / rect.width));
+                audioEl.currentTime = ratio * audioEl.duration;
+                updateMusicTime();
+            });
+
+            $('#musicPlaylist').on('click', '.music-playlist-item', function() {
+                const idx = parseInt($(this).attr('data-idx'), 10);
+                if (!isNaN(idx)) {
+                    playTrackAtIndex(idx);
+                }
+            });
+
+            if (audioEl) {
+                audioEl.volume = 0.7;
+            }
+
+            $musicVolumeSlider.on('input change', function() {
+                if (!audioEl) return;
+                const v = parseInt($(this).val(), 10);
+                if (isNaN(v)) return;
+                const vol = Math.min(1, Math.max(0, v / 100));
+                audioEl.volume = vol;
+            });
+
+            $musicPanel.addClass('music-player-hidden');
+
+            $musicNavBtn.on('click', function() {
+                const hidden = $musicPanel.hasClass('music-player-hidden');
+                if (hidden) {
+                    $musicPanel.removeClass('music-player-hidden');
+                    $musicNavBtn.addClass('active');
+                } else {
+                    $musicPanel.addClass('music-player-hidden');
+                    $musicNavBtn.removeClass('active');
+                }
+            });
+
+            $musicToggleBtn.on('click', function() {
+                const collapsed = $musicPanel.hasClass('collapsed');
+                const $icon = $musicToggleBtn.find('i');
+                if (collapsed) {
+                    $musicPanel.removeClass('collapsed');
+                    $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                } else {
+                    $musicPanel.addClass('collapsed');
+                    $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                }
+            });
+
+
+            function appendMessage(data, skipScroll) {
+                if (data.content && typeof data.content === 'string' && data.content.startsWith('$$JSON$$')) {
+                    try {
+                        const jsonStr = data.content.substring(8);
+                        const parsedData = JSON.parse(jsonStr);
+                        if (parsedData.type === 'weather_card') {
+                            appendWeatherCard(parsedData);
+                            return;
+                        } else if (parsedData.type === 'movie_card') {
+                            appendMovieCard(parsedData);
+                            return;
+                        } else if (parsedData.type === 'news_card') {
+                            appendNewsCard(parsedData);
+                            return;
+                        } else if (parsedData.type === 'music_card') {
+                            appendMusicCard(parsedData);
+                            return;
+                        } else if (parsedData.type === 'generic_json') {
+                            data.content = '<pre style="white-space: pre-wrap; word-wrap: break-word;">' + JSON.stringify(parsedData.data, null, 2) + '</pre>';
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse JSON message', e);
+                    }
+                }
+                const isSelf = data.username === username;
+                const initial = data.username ? data.username[0].toUpperCase() : '?';
+                
+                let avatarHtml = `<div class="message-avatar">${initial}</div>`;
+                if (data.avatar) {
+                     avatarHtml = `<div class="message-avatar" style="background-image: url('${data.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                }
+                
+                const html = `
+                    <div class="message ${isSelf ? 'self' : ''}">
+                        ${avatarHtml}
+                        <div class="message-content-wrapper">
+                            ${!isSelf ? `<div class="message-sender">${data.username}</div>` : ''}
+                            <div class="message-bubble">${data.content}</div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#chatMessages').append(html);
+                if (!skipScroll) {
+                    scrollToBottom();
+                }
+            }
+
+            let currentOnlineUsers = [];
+
+            function appendSystemMessage(content) {
+                const html = `<div class="system-message">${content}</div>`;
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+            
+            let userListUpdateId = 0;
+
+            function updateUserList(users) {
+                const myId = ++userListUpdateId;
+                
+                // Normalize users to objects {username, is_ai}
+                const normalizedUsers = (users || []).map(function(u) {
+                    if (typeof u === 'string') {
+                        return { username: u.trim(), is_ai: false };
+                    }
+                    if (u && u.username) {
+                        return { username: u.username.toString().trim(), is_ai: !!u.is_ai, avatar: u.avatar };
+                    }
+                    return null;
+                }).filter(function(u) { return u && u.username; });
+
+                // Deduplicate by username
+                const uniqueMap = new Map();
+                normalizedUsers.forEach(u => uniqueMap.set(u.username, u));
+                const uniqueUsers = Array.from(uniqueMap.values());
+
+                $('#memberCount').text(uniqueUsers.length);
+                
+                const addBtn = $('#memberGrid .add-btn').clone();
+                $('#memberGrid').empty();
+                
+                uniqueUsers.forEach(u => {
+                    const user = u.username;
+                    const isAi = u.is_ai;
+                    const initial = user[0].toUpperCase();
+                    const aiBadge = isAi ? '<div style="position:absolute; bottom:0; right:0; background:#4CAF50; color:white; font-size:8px; padding:1px 3px; border-radius:4px;">AI</div>' : '';
+                    
+                    let avatarHtml = `<div class="member-avatar user-color" style="position:relative;">${initial}${aiBadge}</div>`;
+                    if (u.avatar) {
+                        avatarHtml = `<div class="member-avatar user-color" style="position:relative; background-image: url('${u.avatar}'); background-size: cover; background-position: center; color: transparent;">${aiBadge}</div>`;
+                    }
+                    
+                    const html = `
+                        <div class="member-item">
+                            ${avatarHtml}
+                            <div class="member-name">${user}</div>
+                        </div>
+                    `;
+                    $('#memberGrid').append(html);
+                });
+                
+                $('#memberGrid').append(addBtn);
+
+                $('#onlineUserCount').text(uniqueUsers.length);
+                const $list = $('#onlineUserList');
+                // Remove synchronous empty() to prevent flickering and allow update check in callback
+                // $list.empty(); 
+
+                $.get('/api/rooms/member_roles', { username: username, room_name: roomName }, function(res) {
+                    if (myId !== userListUpdateId) return; // Prevent race conditions
+                    
+                    $list.empty(); // Clear before appending new data
+                    
+                    let roles = {};
+                    try {
+                        const data = JSON.parse(res);
+                        if (data.code === 0 && Array.isArray(data.members)) {
+                            data.members.forEach(function(m) {
+                                roles[m.username] = m.role || 'member';
+                            });
+                        }
+                    } catch (e) {}
+
+                    uniqueUsers.forEach(function(u) {
+                        const safeName = u.username;
+                        const isAi = u.is_ai;
+                        const initial = safeName ? safeName[0].toUpperCase() : '?';
+                        const role = roles[safeName] || 'member';
+                        const isSelf = safeName === username;
+                        const isTargetOwner = role === 'owner';
+                        const isTargetManager = role === 'manager';
+                        const canKickBanBase = (isRoomOwner || isRoomManager) && !isSelf;
+                        let canKickBan = canKickBanBase && !isTargetOwner;
+                        if (isRoomManager && isTargetManager) {
+                            canKickBan = false;
+                        }
+                        const canSetManager = isRoomOwner && !isSelf && !isTargetOwner;
+                        let roleLabel = '';
+                        if (role === 'owner') roleLabel = '房主';
+                        else if (role === 'manager') roleLabel = '房管';
+                        
+                        const aiBadgeSmall = isAi ? '<span style="background:#4CAF50; color:white; font-size:10px; padding:1px 4px; border-radius:4px; margin-left:4px;">AI</span>' : '';
+
+                        let avatarHtml = `<div class="online-user-avatar">${initial}</div>`;
+                        if (u.avatar) {
+                             avatarHtml = `<div class="online-user-avatar" style="background-image: url('${u.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                        }
+
+                        const html = `
+                            <div class="online-user-row" data-username="${safeName}">
+                                ${avatarHtml}
+                                <div class="online-user-name">
+                                    ${safeName}
+                                    ${aiBadgeSmall}
+                                    ${roleLabel ? `<span class="user-role-badge">${roleLabel}</span>` : ''}
+                                </div>
+                                ${(canKickBan || canSetManager) ? `
+                                <div class="online-user-actions">
+                                    ${canKickBan ? `
+                                        <button class="btn-kick" data-username="${safeName}">踢出</button>
+                                        <button class="btn-ban" data-username="${safeName}">禁入</button>
+                                    ` : ''}
+                                    ${canSetManager ? `
+                                        ${role === 'manager' ? `
+                                            <button class="btn-unset-manager" data-username="${safeName}">取消房管</button>
+                                        ` : `
+                                            <button class="btn-set-manager" data-username="${safeName}">设为房管</button>
+                                        `}
+                                    ` : ''}
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        $list.append(html);
+                    });
+                });
+            }
+
+            function appendMovieCard(data) {
+                console.log('DEBUG: appendMovieCard called with URL:', data.url);
+                const isSelf = data.username === username;
+                const cardId = 'movie-card-' + Date.now() + Math.floor(Math.random() * 1000);
+                
+                const initial = data.username ? data.username[0].toUpperCase() : '?';
+                let avatarHtml = `<div class="message-avatar">${initial}</div>`;
+                if (data.avatar) {
+                     avatarHtml = `<div class="message-avatar" style="background-image: url('${data.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                }
+
+                const html = `
+                    <div class="message ${isSelf ? 'self' : ''}">
+                        ${avatarHtml}
+                        <div class="message-content-wrapper">
+                            ${!isSelf ? `<div class="message-sender">${data.username || 'System'}</div>` : ''}
+                            <div class="movie-card" id="${cardId}">
+                                <div class="movie-header">
+                                    <span><i class="fa-solid fa-film"></i> 视频播放</span>
+                                    <button class="btn-fullscreen" onclick="toggleFullScreen('${cardId}')" title="全屏观看">
+                                        <i class="fa-solid fa-expand"></i> 全屏
+                                    </button>
+                                </div>
+                                <div class="movie-container">
+                                    <iframe src="${data.url}" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" frameborder="0" scrolling="no" referrerpolicy="no-referrer" loading="lazy"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+
+            const newsDetailStore = {};
+            const musicCardStore = {};
+
+            function appendNewsCard(data) {
+                const isSelf = data.username === username;
+                const raw = data.data || {};
+                let items = [];
+                let headerDate = '';
+                if (Array.isArray(raw.data) && raw.data.length > 0 && Array.isArray(raw.data[0].items)) {
+                    headerDate = raw.data[0].title || '';
+                    items = raw.data[0].items;
+                } else if (Array.isArray(raw)) {
+                    items = raw;
+                } else if (Array.isArray(raw.data)) {
+                    items = raw.data;
+                } else if (raw.data && Array.isArray(raw.data.list)) {
+                    items = raw.data.list;
+                } else if (Array.isArray(raw.list)) {
+                    items = raw.list;
+                } else if (Array.isArray(raw.result)) {
+                    items = raw.result;
+                }
+                const normalized = items.slice(0, 8).map(function(item, index) {
+                    const t = item.title || item.name || item.news_title || item.text || ('新闻 ' + (index + 1));
+                    const u = item.url || item.link || item.news_url || item.jump_url || '';
+                    const s = item.eventPlace || item.place || item.source || item.author || item.media || item.from || '';
+                    const tm = item.eventTime || item.time || item.date || item.publish_time || item.pub_time || item.add_time || '';
+                    return {
+                        title: String(t),
+                        url: u ? String(u) : '',
+                        source: s ? String(s) : '',
+                        time: tm ? String(tm) : '',
+                        raw: item
+                    };
+                }).filter(function(item) { return item.title; });
+                if (!normalized.length) {
+                    const fallback = JSON.stringify(raw);
+                    const simple = {
+                        type: 'message',
+                        username: data.username,
+                        content: fallback
+                    };
+                    appendMessage(simple);
+                    return;
+                }
+                const cardId = 'news-card-' + Date.now() + Math.floor(Math.random() * 1000);
+                newsDetailStore[cardId] = normalized;
+                const itemsHtml = normalized.map(function(item, index) {
+                    const indexText = (index + 1) + '. ';
+                    const titleHtml = indexText + item.title;
+                    const sourceText = item.source || '';
+                    const timeText = item.time || '';
+                    return (
+                        '<li class="news-item" data-card-id="' + cardId + '" data-index="' + index + '">' +
+                            '<div class="news-title">' + titleHtml + '</div>' +
+                            '<div class="news-meta">' +
+                                '<span>' + sourceText + '</span>' +
+                                '<span>' + timeText + '</span>' +
+                            '</div>' +
+                        '</li>'
+                    );
+                }).join('');
+
+                const initial = data.username ? data.username[0].toUpperCase() : '?';
+                let avatarHtml = `<div class="message-avatar">${initial}</div>`;
+                if (data.avatar) {
+                     avatarHtml = `<div class="message-avatar" style="background-image: url('${data.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                }
+
+                const html =
+                    `<div class="message ${isSelf ? 'self' : ''}">` +
+                        avatarHtml +
+                        '<div class="message-content-wrapper">' +
+                            (!isSelf ? `<div class="message-sender">${data.username || 'System'}</div>` : '') +
+                            '<div class="news-card" data-card-id="' + cardId + '">' +
+                                '<div class="news-header">' +
+                                    '<div class="news-header-title">' +
+                                        '<i class="fa-solid fa-newspaper"></i>' +
+                                        '<span>今日热点</span>' +
+                                    '</div>' +
+                                    '<span>' + (headerDate || data.time || '') + '</span>' +
+                                '</div>' +
+                                '<div class="news-body">' +
+                                    '<ul class="news-list">' +
+                                        itemsHtml +
+                                    '</ul>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+
+            // Music Card Helpers
+            function normalizeTrack(item, index) {
+                if (!item || typeof item !== 'object') return null;
+                const title = item.title || item.name || item.songname || item.song || item.music || ('歌曲 ' + (index + 1));
+                let artist = '';
+                if (Array.isArray(item.singer)) {
+                    artist = item.singer.map(function(x) { return x.name || x; }).join(' / ');
+                } else {
+                    artist = item.singer || item.sing || item.artist || item.artists || item.author || '';
+                }
+                let album = '';
+                if (item.album && typeof item.album === 'object') {
+                    album = item.album.name || item.album.title || '';
+                } else {
+                    album = item.album || item.al || item.cd || '';
+                }
+                let cover = '';
+                if (item.pic) cover = item.pic;
+                else if (item.picurl) cover = item.picurl;
+                else if (item.cover) cover = item.cover;
+                else if (item.img) cover = item.img;
+                else if (item.image) cover = item.image;
+                else if (item.al && item.al.picUrl) cover = item.al.picUrl;
+                
+                // Clean up cover URL (remove backticks and whitespace)
+                if (typeof cover === 'string') {
+                    cover = cover.replace(/`/g, '').trim();
+                }
+
+                let url = item.url || item.src || item.play_url || item.playUrl || item.audio || item.audio_url || item.link || '';
+                
+                // Clean up audio URL (remove backticks and whitespace)
+                if (typeof url === 'string') {
+                    url = url.replace(/`/g, '').trim();
+                }
+
+                // Fallback: If URL is empty or invalid but we have an ID, try to construct a standard Netease URL
+                if ((!url || url.indexOf('http') === -1) && (item.id)) {
+                    // Use Proxy by default to avoid CORS/ORB issues with direct Netease links
+                    url = '/api/music/proxy?id=' + item.id;
+                }
+
+                let duration = item.duration || item.time || item.timelength || '';
+                if (typeof duration === 'number') {
+                    const secs = duration > 1000 ? Math.round(duration / 1000) : Math.round(duration);
+                    const m = Math.floor(secs / 60);
+                    const s = secs % 60;
+                    const mm = m < 10 ? '0' + m : '' + m;
+                    const ss = s < 10 ? '0' + s : '' + s;
+                    duration = mm + ':' + ss;
+                } else if (typeof duration === 'string' && duration) {
+                    if (/^\d+$/.test(duration)) {
+                        const num = parseInt(duration, 10);
+                        const secs = num > 1000 ? Math.round(num / 1000) : Math.round(num);
+                        const m = Math.floor(secs / 60);
+                        const s = secs % 60;
+                        const mm = m < 10 ? '0' + m : '' + m;
+                        const ss = s < 10 ? '0' + s : '' + s;
+                        duration = mm + ':' + ss;
+                    }
+                }
+                return {
+                    id: item.id,
+                    title: String(title),
+                    artist: artist ? String(artist) : '',
+                    album: album ? String(album) : '',
+                    cover: cover ? String(cover) : '',
+                    url: url ? String(url) : '',
+                    duration: duration ? String(duration) : ''
+                };
+            }
+
+            function processMusicData(data) {
+                const raw = data.data || data || {};
+                let list = [];
+                if (Array.isArray(raw)) {
+                    list = raw;
+                } else if (Array.isArray(raw.data)) {
+                    list = raw.data;
+                } else if (raw.data && Array.isArray(raw.data.list)) {
+                    list = raw.data.list;
+                } else if (Array.isArray(raw.list)) {
+                    list = raw.list;
+                } else if (Array.isArray(raw.result)) {
+                    list = raw.result;
+                }
+                if (!list.length && raw.song) {
+                    list = Array.isArray(raw.song) ? raw.song : [raw.song];
+                }
+                
+                return list.map(function(item, index) {
+                    return normalizeTrack(item, index);
+                }).filter(function(t) { return t && t.title; });
+            }
+
+            function renderMusicCardBody(cardId, tracks) {
+                let primary = null;
+                if (tracks.length) {
+                    primary = tracks[0];
+                }
+                
+                if (!primary) return '<div style="padding:10px;text-align:center;">暂无音乐数据</div>';
+
+                const safeCover = primary.cover || 'https://via.placeholder.com/80x80?text=Music';
+                const primaryMetaParts = [];
+                if (primary.artist) primaryMetaParts.push(primary.artist);
+                if (primary.album) primaryMetaParts.push(primary.album);
+                const primaryMeta = primaryMetaParts.join(' · ');
+                const durationText = primary.duration || '';
+                
+                const trackItemsHtml = tracks.map(function(t, idx) {
+                    const idxText = (idx + 1) + '.';
+                    const metaParts = [];
+                    if (t.artist) metaParts.push(t.artist);
+                    if (t.album) metaParts.push(t.album);
+                    const meta = metaParts.join(' · ');
+                    return (
+                        '<li class="music-track-item" data-card-id="' + cardId + '" data-index="' + idx + '" style="cursor:pointer;">' +
+                            '<div class="music-track-index">' + idxText + '</div>' +
+                            '<div class="music-track-main">' +
+                                '<div class="music-track-title">' + t.title + '</div>' +
+                                '<div class="music-track-meta">' + meta + '</div>' +
+                            '</div>' +
+                        '</li>'
+                    );
+                }).join('');
+
+                return (
+                    '<div class="music-primary">' +
+                        '<div class="music-cover" style="background-image:url(\'' + safeCover.replace(/'/g, '\\\'') + '\')"></div>' +
+                        '<div class="music-primary-main">' +
+                            '<div class="music-primary-title">' + primary.title + '</div>' +
+                            '<div class="music-primary-meta">' + primaryMeta + '</div>' +
+                            '<div class="music-primary-extra">' +
+                                '<span>' + (durationText || '') + '</span>' +
+                                (primary.url ? '<a class="music-play-btn music-play-btn-internal" href="#" data-card-id="' + cardId + '" data-index="0"><i class="fa-solid fa-play"></i><span>播放</span></a>' : '') +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    (trackItemsHtml ? '<ul class="music-track-list" style="max-height: 250px; overflow-y: auto;">' + trackItemsHtml + '</ul>' : '')
+                );
+            }
+
+            function appendMusicCard(data) {
+                const isSelf = data.username === username;
+                
+                // Use global helper to process data
+                const tracks = processMusicData(data);
+                
+                // Fallback for empty data
+                if (!tracks.length) {
+                    const raw = data.data || {};
+                    const simple = {
+                        type: 'message',
+                        username: data.username,
+                        content: JSON.stringify(raw)
+                    };
+                    appendMessage(simple);
+                    return;
+                }
+
+                // Store tracks for playback
+                const cardId = 'music-card-' + Date.now() + Math.floor(Math.random() * 1000);
+                musicCardStore[cardId] = tracks;
+                
+                const timeText = data.time || '';
+                const interfaceName = data.interface_name || data.username || '';
+                
+                // Render body using global helper
+                const bodyHtml = renderMusicCardBody(cardId, tracks);
+                
+                // Refresh button (only if interface_name is present)
+                const refreshBtnHtml = interfaceName 
+                    ? '<i class="fa-solid fa-rotate-right music-refresh-btn" data-card-id="' + cardId + '" data-interface="' + interfaceName + '" title="刷新列表" style="cursor:pointer; margin-left:8px; font-size:12px; color:#6b7280;"></i>' 
+                    : '';
+
+                const initial = data.username ? data.username[0].toUpperCase() : '?';
+                let avatarHtml = `<div class="message-avatar">${initial}</div>`;
+                if (data.avatar) {
+                     avatarHtml = `<div class="message-avatar" style="background-image: url('${data.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                }
+
+                const html =
+                    `<div class="message ${isSelf ? 'self' : ''}">` +
+                        avatarHtml +
+                        '<div class="message-content-wrapper">' +
+                            (!isSelf ? `<div class="message-sender">${data.username || 'System'}</div>` : '') +
+                            '<div class="music-card" id="' + cardId + '">' +
+                                '<div class="music-card-header">' +
+                                    '<div class="music-card-title">' +
+                                        '<i class="fa-solid fa-music"></i>' +
+                                        '<span>音乐推荐</span>' +
+                                        refreshBtnHtml +
+                                    '</div>' +
+                                    '<div class="music-card-time">' + timeText + '</div>' +
+                                '</div>' +
+                                '<div class="music-card-body">' +
+                                    bodyHtml +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+
+            // Refresh Button Handler
+            $('#chatMessages').on('click', '.music-refresh-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $btn = $(this);
+                if ($btn.hasClass('fa-spin')) return; 
+
+                const cardId = $btn.data('card-id');
+                const interfaceName = $btn.data('interface');
+                
+                if (!cardId || !interfaceName) return;
+                
+                $btn.addClass('fa-spin');
+                
+                $.ajax({
+                    url: '/api/music/refresh',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ interface_name: interfaceName }),
+                    success: function(resp) {
+                        $btn.removeClass('fa-spin');
+                        let res = resp;
+                        if (typeof res === 'string') {
+                            try { res = JSON.parse(res); } catch(e) {}
+                        }
+                        
+                        if (res.code === 0 || res.code === '0' || res.code === 200) {
+                            const rawData = (res && res.data !== undefined) ? res.data : res;
+                            const newTracks = processMusicData(rawData) || [];
+                            musicCardStore[cardId] = newTracks;
+                            const newBody = renderMusicCardBody(cardId, newTracks);
+                            $('#' + cardId + ' .music-card-body').html(newBody);
+                        } else {
+                            console.error('Refresh failed:', res.msg);
+                        }
+                    },
+                    error: function(err) {
+                        $btn.removeClass('fa-spin');
+                        console.error('Refresh error:', err);
+                    }
+                });
+            });
+
+            // Music Card Interaction Handler
+            $('#chatMessages').on('click', '.music-track-item, .music-play-btn-internal', function(e) {
+                e.preventDefault();
+                const cardId = $(this).data('card-id');
+                const idx = parseInt($(this).data('index'), 10);
+                if (!cardId || isNaN(idx)) return;
+                
+                const tracks = musicCardStore[cardId];
+                if (!tracks || !tracks.length) return;
+                
+                // Update global playlist
+                musicPlaylist = tracks.map(function(t) {
+                    return {
+                        id: t.id,  // Add ID for fallback
+                        name: t.title + (t.artist ? ' - ' + t.artist : ''),
+                        url: t.url,
+                        cover: t.cover
+                    };
+                });
+                
+                // Update UI and Play
+                renderPlaylist();
+                playTrackAtIndex(idx);
+                
+                // Show player panel if hidden
+                if ($musicPanel.hasClass('music-player-hidden')) {
+                    $musicPanel.removeClass('music-player-hidden');
+                    $musicNavBtn.addClass('active');
+                }
+            });
+
+            $('#chatMessages').on('click', '.news-item', function() {
+                const cardId = $(this).data('card-id');
+                const idx = parseInt($(this).data('index'), 10);
+                if (!cardId || isNaN(idx)) return;
+                const list = newsDetailStore[cardId];
+                if (!list || !list[idx]) return;
+                const item = list[idx];
+                const raw = item.raw || {};
+                $('#newsDetailTitle').text(item.title);
+                const metaParts = [];
+                if (item.time) metaParts.push(item.time);
+                if (item.source) metaParts.push(item.source);
+                $('#newsDetailMeta').text(metaParts.join(' · '));
+                let contentHtml = '';
+                const desc = raw.desc || raw.description || raw.content || raw.summary || '';
+                if (desc) {
+                    const escaped = $('<div>').text(desc).html();
+                    contentHtml += '<div>' + escaped + '</div>';
+                }
+                if (item.url) {
+                    const urlEscaped = $('<div>').text(item.url).html();
+                    contentHtml += '<div style="margin-top:8px; font-size:12px;"><a href="' + urlEscaped + '" target="_blank" rel="noopener noreferrer">查看原文链接</a></div>';
+                }
+                const query = item.title || '';
+                if (query) {
+                    const q = encodeURIComponent(query);
+                    const baidu = 'https://www.baidu.com/s?wd=' + q;
+                    const bing = 'https://www.bing.com/search?q=' + q;
+                    contentHtml += '<div style="margin-top:10px; font-size:12px; color:#6b7280;">';
+                    contentHtml += '相关搜索：';
+                    contentHtml += '<a href="' + baidu + '" target="_blank" rel="noopener noreferrer" style="margin-right:8px;">百度</a>';
+                    contentHtml += '<a href="' + bing + '" target="_blank" rel="noopener noreferrer">必应</a>';
+                    contentHtml += '</div>';
+                }
+                if (!contentHtml) {
+                    contentHtml = '<div>暂无更多详细内容</div>';
+                }
+                $('#newsDetailContent').html(contentHtml);
+                $('#newsDetailModal').addClass('open');
+            });
+
+            window.toggleFullScreen = function(cardId) {
+                const card = document.getElementById(cardId);
+                if (!card) return;
+                const iframe = card.querySelector('iframe');
+                if (!iframe) return;
+
+                if (iframe.requestFullscreen) {
+                    iframe.requestFullscreen();
+                } else if (iframe.mozRequestFullScreen) { /* Firefox */
+                    iframe.mozRequestFullScreen();
+                } else if (iframe.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    iframe.webkitRequestFullscreen();
+                } else if (iframe.msRequestFullscreen) { /* IE/Edge */
+                    iframe.msRequestFullscreen();
+                }
+            };
+
+            function scrollToBottom() {
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function startAiChat(prompt) {
+                // Just trigger the SSE. The UI updates via WebSocket.
+                const eventSource = new EventSource('/api/ai/chat_stream?username=' + encodeURIComponent(username) + '&prompt=' + encodeURIComponent(prompt) + '&room_name=' + encodeURIComponent(roomName));
+                
+                eventSource.onmessage = function(e) {
+                    if (e.data === '[DONE]') {
+                        eventSource.close();
+                    }
+                };
+                
+                eventSource.onerror = function(e) {
+                    eventSource.close();
+                };
+            }
+
+            function appendAiMessageStart(data) {
+                const aiAvatarChar = '🤖'; 
+                const replyTo = data.reply_to ? ' <span style="font-size: 12px; color: #888;">回复 @' + data.reply_to + '</span>' : '';
+                
+                let avatarStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;';
+                let avatarContent = aiAvatarChar;
+                
+                if (data.ai_avatar) {
+                    avatarStyle = `background-image: url('${data.ai_avatar}'); background-size: cover; background-position: center; color: transparent;`;
+                    avatarContent = '';
+                }
+                
+                const html = `
+                    <div class="message" id="${data.id}" data-full-text="">
+                        <div class="message-avatar" style="${avatarStyle}">${avatarContent}</div>
+                        <div class="message-content-wrapper">
+                            <div class="message-sender">${data.ai_name}${replyTo}</div>
+                            <div class="message-bubble markdown-body">
+                                <span class="typing-indicator">思考中...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#chatMessages').append(html);
+                scrollToBottom();
+            }
+
+            function appendAiMessageChunk(data) {
+                const $msg = $('#' + data.id);
+                if ($msg.length) {
+                    let fullText = $msg.data('full-text') || '';
+                    fullText += data.content;
+                    $msg.data('full-text', fullText);
+                    const $bubble = $msg.find('.message-bubble');
+                    // Use marked.parse if available
+                    if (typeof marked !== 'undefined') {
+                        $bubble.html(marked.parse(fullText));
+                    } else {
+                        $bubble.text(fullText);
+                    }
+                    scrollToBottom();
+                }
+            }
+
+            function endAiMessage(data) {
+                const $msg = $('#' + data.id);
+                if ($msg.length) {
+                    const fullText = $msg.data('full-text');
+                    if (!fullText) {
+                         const $bubble = $msg.find('.message-bubble');
+                         if ($bubble.find('.typing-indicator').length) {
+                             $bubble.html('<i>(无内容)</i>');
+                         }
+                    }
+                }
+            }
+
+            function getAiUserName() {
+                if (!currentOnlineUsers || !currentOnlineUsers.length) return null;
+                for (let i = 0; i < currentOnlineUsers.length; i++) {
+                    const u = currentOnlineUsers[i];
+                    if (u && typeof u === 'object' && u.is_ai) {
+                        return u.username;
+                    }
+                }
+                return null;
+            }
+
+            function sendMessage() {
+                const content = $('#messageInput').val().trim();
+                if (content && ws) {
+                    ws.send(JSON.stringify({
+                        type: 'message',
+                        content: content
+                    }));
+                    
+                    const aiName = getAiUserName();
+                    if (aiName && content.indexOf('@' + aiName) !== -1) {
+                        setTimeout(function() {
+                            startAiChat(content);
+                        }, 100);
+                    }
+                    
+                    $('#messageInput').val('');
+                    $('#messageInput').trigger('input');
+                }
+            }
+
+            $('#sendBtn').on('click', sendMessage);
+
+            function updateSendButtonState() {
+                const content = $('#messageInput').val().trim();
+                $('#sendBtn').prop('disabled', !content);
+            }
+
+            function autoResizeTextarea() {
+                const el = document.getElementById('messageInput');
+                if (!el) return;
+                el.style.height = 'auto';
+                const maxHeight = 160;
+                el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
+            }
+
+            $('#messageInput').on('input', function() {
+                updateSendButtonState();
+                autoResizeTextarea();
+            });
+
+            $('#messageInput').on('keypress', function(e) {
+                if (e.which === 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            $('#onlineUserList').on('click', '.btn-kick', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                if (!confirm('确定要将 ' + targetName + ' 踢出本房间吗？')) return;
+                $.ajax({
+                    url: '/api/rooms/kick',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code !== 0) {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            $('#onlineUserList').on('click', '.btn-ban', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                if (!confirm('确定要将 ' + targetName + ' 禁止加入本房间吗？')) return;
+                $.ajax({
+                    url: '/api/rooms/ban',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code !== 0) {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            $('#onlineUserList').on('click', '.btn-set-manager', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/rooms/set_manager',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName, is_manager: true }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code !== 0) {
+                            alert(data.msg || '操作失败');
+                        } else {
+                            updateUserList(currentOnlineUsers);
+                        }
+                    }
+                });
+            });
+
+            $('#onlineUserList').on('click', '.btn-unset-manager', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/rooms/set_manager',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName, is_manager: false }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code !== 0) {
+                            alert(data.msg || '操作失败');
+                        } else {
+                            updateUserList(currentOnlineUsers);
+                        }
+                    }
+                });
+            });
+
+            // --- Friend System Logic ---
+            const $friendDrawer = $('#friendDrawer');
+            const $friendListBtn = $('#friendListBtn');
+            const $closeFriendDrawerBtn = $('#closeFriendDrawerBtn');
+            const $addFriendModal = $('#addFriendModal');
+            const $inviteFriendModal = $('#inviteFriendModal');
+            const $inviteFriendList = $('#inviteFriendList');
+            const $inviteFriendResult = $('#inviteFriendResult');
+            const $addFriendInput = $('#addFriendInput');
+            const $searchDropdown = $('#searchDropdown');
+            const $searchInput = $('#searchInput');
+            const roomListRefreshInterval = 5000;
+
+            let friendList = [];
+            let requestList = [];
+            let blockedList = [];
+            let roomListTimer = null;
+
+            // Open Friend Drawer
+            $friendListBtn.on('click', function() {
+                loadFriendsData();
+                $friendDrawer.addClass('open');
+                updateBackdropState();
+            });
+
+            function renderRoomList(groups, dms) {
+                const $recent = $('#recentChats');
+                let html = '';
+                if (Array.isArray(dms) && dms.length > 0) {
+                    html += '<div class="list-section-title" style="padding: 10px 15px; font-size: 12px; color: #999; font-weight: bold;">私信</div>';
+                    dms.forEach(function(room) {
+                        const activeClass = room.name === roomName ? 'active' : '';
+                        const initial = room.display_name ? room.display_name.charAt(0).toUpperCase() : '?';
+                        let avatarHtml = `<div class="chat-avatar" style="background-color: #a29bfe; border-radius: 6px; font-size: 16px;">${initial}</div>`;
+                        if (room.avatar) {
+                             avatarHtml = `<div class="chat-avatar" style="background-image: url('${room.avatar}'); background-size: cover; background-position: center; color: transparent; border-radius: 6px;"></div>`;
+                        }
+                        html += `
+                            <div class="chat-item ${activeClass}" data-room="${room.name}">
+                                ${avatarHtml}
+                                <div class="chat-info">
+                                    <div class="chat-name-row">
+                                        <span class="chat-name">${room.display_name}</span>
+                                        <div style="display: flex; align-items: center;">
+                                            <span class="chat-time">${room.last_time || ''}</span>
+                                            ${room.unread_count > 0 ? `<span class="unread-badge">${room.unread_count}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="chat-preview">
+                                        ${room.last_content || ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                if (Array.isArray(groups) && groups.length > 0) {
+                    html += '<div class="list-section-title" style="padding: 10px 15px; font-size: 12px; color: #999; font-weight: bold;">群聊</div>';
+                    groups.forEach(function(room) {
+                        const activeClass = room.name === roomName ? 'active' : '';
+                        html += `
+                            <div class="chat-item ${activeClass}" data-room="${room.name}">
+                                <div class="chat-avatar group-avatar"><i class="fa-solid fa-users"></i></div>
+                                <div class="chat-info">
+                                    <div class="chat-name-row">
+                                        <span class="chat-name">${room.name}</span>
+                                        <div style="display: flex; align-items: center;">
+                                            <span class="chat-time">${room.last_time || ''}</span>
+                                            ${room.unread_count > 0 ? `<span class="unread-badge">${room.unread_count}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="chat-preview">
+                                        ${room.last_content || ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $recent.html(html);
+            }
+
+            function refreshRoomList() {
+                $.get('/api/rooms/list?username=' + encodeURIComponent(username), function(res) {
+                    try {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            renderRoomList(data.groups || [], data.dms || []);
+                        }
+                    } catch (e) {
+                    }
+                });
+            }
+
+            refreshRoomList();
+            roomListTimer = setInterval(refreshRoomList, roomListRefreshInterval);
+
+            // Close Friend Drawer
+            $closeFriendDrawerBtn.on('click', function() {
+                $friendDrawer.removeClass('open');
+                updateBackdropState();
+            });
+
+            // Tab Switching
+            $('.friend-tab').on('click', function() {
+                $('.friend-tab').removeClass('active');
+                $(this).addClass('active');
+                const tab = $(this).data('tab');
+                if (tab === 'friends') {
+                    $('#friendListContainer').show();
+                    $('#requestListContainer').hide();
+                    $('#blockedListContainer').hide();
+                } else if (tab === 'requests') {
+                    $('#friendListContainer').hide();
+                    $('#requestListContainer').show();
+                    $('#blockedListContainer').hide();
+                } else if (tab === 'blocked') {
+                    $('#friendListContainer').hide();
+                    $('#requestListContainer').hide();
+                    $('#blockedListContainer').show();
+                }
+            });
+
+            function loadFriendsData(cb) {
+                $.get('/api/friends?username=' + encodeURIComponent(username), function(res) {
+                    const data = JSON.parse(res);
+                    if (data.code === 0) {
+                        friendList = data.friends;
+                        requestList = data.requests;
+                        blockedList = data.blocks || [];
+                        blockedUsers = (blockedList || []).map(function(b) { return b.username; });
+                        renderFriendList();
+                        renderRequestList();
+                        renderBlockedList();
+                        updateRequestBadge();
+                        if (typeof cb === 'function') {
+                            cb();
+                        }
+                    }
+                });
+            }
+
+            function updateRequestBadge() {
+                const count = requestList.length;
+                const $badge = $('#requestCountBadge');
+                $badge.text(count);
+                if (count > 0) $badge.show(); else $badge.hide();
+            }
+
+            function renderFriendList() {
+                const $container = $('#friendListContainer');
+                $container.empty();
+                if (friendList.length === 0) {
+                    $container.append('<div style="text-align:center; color:#ccc; margin-top:20px;">暂无好友</div>');
+                    return;
+                }
+                friendList.forEach(f => {
+                    const initial = f.username[0].toUpperCase();
+                    let avatarHtml = `<div class="friend-avatar">${initial}</div>`;
+                    if (f.avatar) {
+                        avatarHtml = `<div class="friend-avatar" style="background-image: url('${f.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                    }
+                    const html = `
+                        <div class="friend-item">
+                            ${avatarHtml}
+                            <div class="friend-info">
+                                <div class="friend-name">${f.username}</div>
+                            </div>
+                            <div class="friend-actions">
+                                <div class="btn-icon-sm" title="聊天" onclick="startPrivateChat('${f.username}')">
+                                    <i class="fa-regular fa-comment"></i>
+                                </div>
+                                <div class="btn-icon-sm danger delete-friend-btn" title="删除" data-username="${f.username}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </div>
+                                <div class="btn-icon-sm danger block-friend-btn" title="拉黑" data-username="${f.username}">
+                                    <i class="fa-solid fa-ban"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(html);
+                });
+            }
+
+            function renderBlockedList() {
+                const $container = $('#blockedListContainer');
+                $container.empty();
+                if (!blockedList || blockedList.length === 0) {
+                    $container.append('<div style="text-align:center; color:#ccc; margin-top:20px;">暂无拉黑用户</div>');
+                    return;
+                }
+                blockedList.forEach(b => {
+                    const name = b.username || '';
+                    if (!name) return;
+                    const initial = name[0].toUpperCase();
+                    let avatarHtml = `<div class="friend-avatar">${initial}</div>`;
+                    if (b.avatar) {
+                        avatarHtml = `<div class="friend-avatar" style="background-image: url('${b.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                    }
+                    const html = `
+                        <div class="friend-item">
+                            ${avatarHtml}
+                            <div class="friend-info">
+                                <div class="friend-name">${name}</div>
+                            </div>
+                            <div class="friend-actions">
+                                <button class="btn-secondary unblock-user-btn" data-username="${name}" style="padding:4px 10px; font-size:12px;">取消拉黑</button>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(html);
+                });
+            }
+
+            function renderInviteFriendList() {
+                $inviteFriendList.empty();
+                if (!Array.isArray(friendList) || friendList.length === 0) {
+                    $inviteFriendList.append('<div style="text-align:center; color:#ccc; margin-top:10px;">暂无好友可邀请</div>');
+                    return;
+                }
+                friendList.forEach(f => {
+                    const name = f.username || '';
+                    if (!name) return;
+                    const initial = name[0].toUpperCase();
+                    const row = `
+                        <div class="friend-item">
+                            <div class="friend-avatar">${initial}</div>
+                            <div class="friend-info">
+                                <div class="friend-name">${name}</div>
+                            </div>
+                            <div class="friend-actions">
+                                <button class="btn-primary btn-invite-friend" data-username="${name}" style="padding:4px 10px; font-size:12px;">邀请</button>
+                            </div>
+                        </div>
+                    `;
+                    $inviteFriendList.append(row);
+                });
+            }
+
+            // Delegate Delete Event
+            $('#friendListContainer').on('click', '.delete-friend-btn', function() {
+                const friendName = $(this).data('username');
+                if (confirm('确定要删除好友 ' + friendName + ' 吗？')) {
+                    $.ajax({
+                        url: '/api/friends/delete',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ username: username, friend_username: friendName }),
+                        success: function(res) {
+                            const data = JSON.parse(res);
+                            if (data.code === 0) {
+                                // If we are currently in the private chat with this friend, redirect to default
+                                if (isPrivate && roomDisplayName === friendName) {
+                                    window.location.href = '/chat?username=' + encodeURIComponent(username);
+                                } else {
+                                    window.location.reload();
+                                }
+                            } else {
+                                alert(data.msg);
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('#friendListContainer').on('click', '.block-friend-btn', function() {
+                const friendName = $(this).data('username');
+                if (!friendName) return;
+                if (!confirm('确定要将 ' + friendName + ' 加入黑名单吗？')) return;
+                $.ajax({
+                    url: '/api/friends/block',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: username, target_username: friendName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            loadFriendsData();
+                            if (isPrivate && roomDisplayName === friendName) {
+                                window.location.href = '/chat?username=' + encodeURIComponent(username);
+                            }
+                        } else {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            $('#blockedListContainer').on('click', '.unblock-user-btn', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/friends/unblock',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: username, target_username: targetName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            loadFriendsData();
+                        } else {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            function renderRequestList() {
+                const $container = $('#requestListContainer');
+                $container.empty();
+                if (requestList.length === 0) {
+                    $container.append('<div style="text-align:center; color:#ccc; margin-top:20px;">暂无新请求</div>');
+                    return;
+                }
+                requestList.forEach(r => {
+                    const initial = r.username[0].toUpperCase();
+                    let avatarHtml = `<div class="friend-avatar" style="width:30px; height:30px; font-size:12px;">${initial}</div>`;
+                    if (r.avatar) {
+                        avatarHtml = `<div class="friend-avatar" style="width:30px; height:30px; font-size:12px; background-image: url('${r.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                    }
+                    const html = `
+                        <div class="request-item">
+                            <div style="display:flex; align-items:center;">
+                                ${avatarHtml}
+                                <span style="font-size:13px; font-weight:500;">${r.username}</span>
+                            </div>
+                            <div class="request-actions">
+                                <button class="btn-accept" data-id="${r.id}" data-username="${r.username}">同意</button>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(html);
+                });
+            }
+
+            // Delegate Accept Event
+            $('#requestListContainer').on('click', '.btn-accept', function() {
+                const friendName = $(this).data('username');
+                $.ajax({
+                    url: '/api/friends/accept',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: username, friend_username: friendName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            loadFriendsData();
+                            alert('已添加好友');
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            });
+
+            // Override Add Button (top-left + button)
+            $('.btn-add').off('click').on('click', function() {
+                $addFriendModal.addClass('open');
+                $addFriendInput.focus();
+                $('#addFriendResult').text('');
+            });
+
+            $('#closeAddFriendBtn').on('click', function() {
+                $addFriendModal.removeClass('open');
+            });
+
+            $('#confirmAddFriendBtn').on('click', function() {
+                const target = $addFriendInput.val().trim();
+                if (!target) return;
+                const mode = $('input[name="addType"]:checked').val() || 'friend';
+                if (mode === 'friend') {
+                    $.ajax({
+                        url: '/api/friends?username=' + encodeURIComponent(username),
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ target_username: target }),
+                        success: function(res) {
+                            const data = JSON.parse(res);
+                            if (data.code === 0) {
+                                $('#addFriendResult').html('<span style="color:green">请求已发送</span>');
+                                setTimeout(() => {
+                                    $addFriendModal.removeClass('open');
+                                    $addFriendInput.val('');
+                                    $('#addFriendResult').text('');
+                                }, 1500);
+                            } else {
+                                $('#addFriendResult').html('<span style="color:red">' + data.msg + '</span>');
+                            }
+                        }
+                    });
+                } else if (mode === 'room') {
+                    $.ajax({
+                        url: '/api/rooms/join_or_create',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ username: username, room_name: target }),
+                        success: function(res) {
+                            const data = JSON.parse(res);
+                            if (data.code === 0) {
+                                $('#addFriendResult').html('<span style="color:green">' + data.msg + '</span>');
+                                setTimeout(() => {
+                                    window.location.href = '/chat?username=' + encodeURIComponent(username) + '&room=' + encodeURIComponent(data.room_name);
+                                }, 600);
+                            } else {
+                                $('#addFriendResult').html('<span style="color:red">' + data.msg + '</span>');
+                            }
+                        }
+                    });
+                } else if (mode === 'room_apply') {
+                    $.ajax({
+                        url: '/api/rooms/apply',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ username: username, room_name: target }),
+                        success: function(res) {
+                            const data = JSON.parse(res);
+                            if (data.code === 0) {
+                                $('#addFriendResult').html('<span style="color:green">' + data.msg + '</span>');
+                                setTimeout(() => {
+                                    $addFriendModal.removeClass('open');
+                                    $addFriendInput.val('');
+                                    $('#addFriendResult').text('');
+                                }, 1500);
+                            } else {
+                                $('#addFriendResult').html('<span style="color:red">' + data.msg + '</span>');
+                            }
+                        }
+                    });
+                } else if (mode === 'room_code') {
+                    if (!/^\d{6}$/.test(target)) {
+                        $('#addFriendResult').html('<span style="color:red">房间号格式不正确，应为6位数字</span>');
+                        return;
+                    }
+                    $.ajax({
+                        url: '/api/rooms/join_by_code',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ username: username, room_code: target }),
+                        success: function(res) {
+                            const data = JSON.parse(res);
+                            if (data.code === 0) {
+                                $('#addFriendResult').html('<span style="color:green">' + data.msg + '</span>');
+                                setTimeout(() => {
+                                    window.location.href = '/chat?username=' + encodeURIComponent(username) + '&room=' + encodeURIComponent(data.room_name);
+                                }, 600);
+                            } else {
+                                $('#addFriendResult').html('<span style="color:red">' + data.msg + '</span>');
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('#memberGrid').on('click', '.add-btn', function() {
+                if (isPrivate) return;
+                loadFriendsData(function() {
+                    renderInviteFriendList();
+                    $inviteFriendResult.text('');
+                    $inviteFriendModal.addClass('open');
+                });
+            });
+
+            $('#closeInviteFriendBtn').on('click', function() {
+                $inviteFriendModal.removeClass('open');
+            });
+
+            $('#inviteFriendList').on('click', '.btn-invite-friend', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/rooms/invite',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            $inviteFriendResult.html('<span style="color:green">已邀请 ' + targetName + ' 加入群聊</span>');
+                            refreshRoomList();
+                        } else {
+                            $inviteFriendResult.html('<span style="color:red">' + (data.msg || '邀请失败') + '</span>');
+                        }
+                    }
+                });
+            });
+
+            function refreshJoinRequests() {
+                if (isPrivate || (!isRoomOwner && !isRoomManager)) {
+                    $('#joinRequestsSection').hide();
+                    return;
+                }
+                $.get('/api/rooms/join_requests', { username: username, room_name: roomName }, function(res) {
+                    try {
+                        const data = JSON.parse(res);
+                        const $section = $('#joinRequestsSection');
+                        const $list = $('#joinRequestsList');
+                        $list.empty();
+                        if (data.code === 0 && Array.isArray(data.requests) && data.requests.length > 0) {
+                            data.requests.forEach(function(item) {
+                                const name = item.username;
+                                const row = `
+                                    <div class="join-request-item">
+                                        <span class="join-request-name">${name}</span>
+                                        <button class="btn-primary btn-approve-join" data-username="${name}" style="margin-left:8px; padding:2px 8px; font-size:12px;">同意</button>
+                                        <button class="btn-secondary btn-reject-join" data-username="${name}" style="margin-left:4px; padding:2px 8px; font-size:12px;">拒绝</button>
+                                    </div>
+                                `;
+                                $list.append(row);
+                            });
+                            $section.show();
+                        } else {
+                            $section.hide();
+                        }
+                    } catch (e) {
+                        $('#joinRequestsSection').hide();
+                    }
+                });
+            }
+
+            refreshJoinRequests();
+            setInterval(refreshJoinRequests, 15000);
+
+            $('#joinRequestsList').on('click', '.btn-approve-join', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/rooms/join_requests/handle',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName, action: 'approve' }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            refreshJoinRequests();
+                            refreshRoomList();
+                        } else {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            $('#joinRequestsList').on('click', '.btn-reject-join', function() {
+                const targetName = $(this).data('username');
+                if (!targetName) return;
+                $.ajax({
+                    url: '/api/rooms/join_requests/handle',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ actor: username, target: targetName, room_name: roomName, action: 'reject' }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            refreshJoinRequests();
+                        } else {
+                            alert(data.msg || '操作失败');
+                        }
+                    }
+                });
+            });
+
+            const $announcementModal = $('#announcementModal');
+            const $announcementInput = $('#announcementInput');
+            const $announcementResult = $('#announcementResult');
+
+            $('#roomAnnouncementValue').on('click', function() {
+                if (isPrivate || (!isRoomOwner && !isRoomManager)) {
+                    return;
+                }
+                const text = $(this).text().trim();
+                $announcementInput.val(text === '暂无群公告' ? '' : text);
+                $announcementResult.text('');
+                $announcementModal.addClass('open');
+            });
+
+            $('#closeAnnouncementBtn').on('click', function() {
+                $announcementModal.removeClass('open');
+            });
+
+            $('#saveAnnouncementBtn').on('click', function() {
+                const content = $announcementInput.val().trim();
+                $.ajax({
+                    url: '/api/rooms/announcement',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        room_name: roomName,
+                        content: content
+                    }),
+                    success: function(res) {
+                        let data;
+                        try {
+                            data = JSON.parse(res);
+                        } catch (e) {
+                            data = { code: 1, msg: '服务器返回异常' };
+                        }
+                        if (data.code === 0) {
+                            $announcementResult.html('<span style="color:green;">' + data.msg + '</span>');
+                            $('#roomAnnouncementValue').text(content || '暂无群公告');
+                            setTimeout(function() {
+                                $announcementModal.removeClass('open');
+                            }, 800);
+                        } else {
+                            $announcementResult.html('<span style="color:red;">' + (data.msg || '更新失败') + '</span>');
+                        }
+                    }
+                });
+            });
+
+            // Search Logic
+            let searchTimeout;
+            $searchInput.on('input', function() {
+                const query = $(this).val().trim();
+                
+                // Filter local chats (Friends and Groups in recent list)
+                const lowerQuery = query.toLowerCase();
+                $('.chat-item').each(function() {
+                    const name = $(this).find('.chat-name').text().toLowerCase();
+                    if (name.includes(lowerQuery)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (!query) {
+                    $searchDropdown.removeClass('show');
+                    $('.chat-item').show();
+                    return;
+                }
+                
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    $.get('/api/search/users?q=' + encodeURIComponent(query) + '&username=' + encodeURIComponent(username), function(res) {
+                        const data = JSON.parse(res);
+                        $searchDropdown.empty();
+                        if (data.code === 0 && data.data.length > 0) {
+                            data.data.forEach(u => {
+                                let avatarHtml = `<div class="friend-avatar" style="width:24px; height:24px; font-size:10px; margin-right:8px;">${u.username[0].toUpperCase()}</div>`;
+                                if (u.avatar) {
+                                    avatarHtml = `<div class="friend-avatar" style="width:24px; height:24px; font-size:10px; margin-right:8px; background-image: url('${u.avatar}'); background-size: cover; background-position: center; color: transparent;"></div>`;
+                                }
+                                $searchDropdown.append(`
+                                    <div class="search-result-item" onclick="$('#addFriendInput').val('${u.username}'); $addFriendModal.addClass('open'); $searchDropdown.removeClass('show');">
+                                        ${avatarHtml}
+                                        <span>${u.username}</span>
+                                        <span style="font-size:10px; color:#999; margin-left:auto;">添加</span>
+                                    </div>
+                                `);
+                            });
+                            $searchDropdown.addClass('show');
+                        } else {
+                            $searchDropdown.removeClass('show');
+                        }
+                    });
+                }, 300);
+            });
+            
+            // Hide dropdown on click outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-bar, .search-dropdown').length) {
+                    $searchDropdown.removeClass('show');
+                }
+            });
+
+            updateSendButtonState();
+            autoResizeTextarea();
+
+            window.startPrivateChat = function(targetUsername) {
+                $.ajax({
+                    url: '/api/private_chat',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: username, target_username: targetUsername }),
+                    success: function(res) {
+                        const data = JSON.parse(res);
+                        if (data.code === 0) {
+                            window.location.href = '/chat?username=' + encodeURIComponent(username) + '&room=' + encodeURIComponent(data.room_name);
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+</html>

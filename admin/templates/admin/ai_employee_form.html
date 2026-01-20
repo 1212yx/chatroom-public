@@ -1,0 +1,58 @@
+{% extends session.base_layout %}
+
+{% block title %}{{ '编辑' if employee else '添加' }}数字员工{% endblock %}
+
+{% block content %}
+<div class="layui-card">
+    <div class="layui-card-header">{{ '编辑' if employee else '添加' }}数字员工</div>
+    <div class="layui-card-body">
+        <form class="layui-form" method="POST">
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input type="text" name="username" required lay-verify="required" placeholder="请输入用户名 (例如 @天气助手)" autocomplete="off" class="layui-input" value="{{ employee.username if employee else '' }}" {{ 'readonly' if employee else '' }}>
+                </div>
+            </div>
+            
+            {% if not employee %}
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="password" required lay-verify="required" placeholder="请输入登录密码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="layui-form-item">
+                <label class="layui-form-label">称号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="title" placeholder="请输入称号 (例如 数字员工)" autocomplete="off" class="layui-input" value="{{ employee.title if employee and employee.title else '数字员工' }}">
+                </div>
+            </div>
+            
+            {% if employee %}
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" name="is_banned" value="1" title="禁用" {{ 'checked' if employee.is_banned else '' }}>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">保存</button>
+                    <a href="{{ url_for('admin.ai_employee_list') }}" class="layui-btn layui-btn-primary">返回</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+layui.use('form', function(){
+    var form = layui.form;
+    form.render();
+});
+</script>
+{% endblock %}

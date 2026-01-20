@@ -1,0 +1,87 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 1200px; margin: 0 auto;">
+    <div class="layui-card-header">
+      菜单管理
+      <a href="{{ url_for('admin.menu_add') }}" class="layui-btn layui-btn-sm layui-btn-normal layui-btn-radius" style="float: right; margin-top: 5px;">新增菜单</a>
+    </div>
+    <div class="layui-card-body">
+      <table class="layui-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>菜单名称</th>
+            <th>所属分组</th>
+            <th>图标</th>
+            <th>链接地址</th>
+            <th>排序</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for menu in menus %}
+          <tr>
+            <td>{{ menu.id }}</td>
+            <td>{{ menu.name }}</td>
+            <td>{{ menu.category or '' }}</td>
+            <td>
+              {% if menu.icon %}
+              <i class="{{ menu.icon }}"></i>
+              <span style="margin-left:4px;">{{ menu.icon }}</span>
+              {% else %}
+              <span style="color:#ccc;">无</span>
+              {% endif %}
+            </td>
+            <td>{{ menu.url }}</td>
+            <td>{{ menu.sort_order }}</td>
+            <td>
+              {% if menu.is_active %}
+              <span class="layui-badge layui-bg-green">启用</span>
+              {% else %}
+              <span class="layui-badge">禁用</span>
+              {% endif %}
+            </td>
+            <td>{{ menu.created_at.split('T')[0] if menu.created_at else '' }}</td>
+            <td>
+              <a href="{{ url_for('admin.menu_edit', menu_id=menu.id) }}" class="layui-btn layui-btn-xs layui-btn-radius">编辑</a>
+              <a href="javascript:;" data-url="{{ url_for('admin.menu_delete', menu_id=menu.id) }}" data-confirm="确定删除该菜单吗？" class="layui-btn layui-btn-xs layui-btn-danger layui-btn-radius btn-action" style="margin-left: 4px;">删除</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" style="text-align:center;">暂无数据</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if total_pages > 1 %}
+      <div id="page"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['laypage','jquery'], function(){
+  var laypage = layui.laypage;
+  var $ = layui.$;
+  laypage.render({
+    elem: 'page',
+    count: Number('{{ total_menus }}'),
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        var url = "{{ url_for('admin.menu_list') }}?page=" + obj.curr;
+        window.location.href = url;
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
+

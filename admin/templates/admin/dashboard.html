@@ -1,0 +1,456 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>数字大屏 - 实时监控</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/layui/css/layui.css') }}" media="all">
+    <script src="{{ url_for('static', filename='lib/echarts.min.js') }}"></script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            overflow-x: hidden;
+        }
+        .dashboard-header {
+            height: 60px;
+            background: linear-gradient(to right, #1a233a, #0b0f19);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #333;
+        }
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d8ff;
+            text-shadow: 0 0 10px rgba(0, 216, 255, 0.5);
+        }
+        .dashboard-time {
+            font-size: 16px;
+            color: #aaa;
+        }
+        .dashboard-controls .layui-btn {
+            background: transparent;
+            border: 1px solid #00d8ff;
+            color: #00d8ff;
+        }
+        .dashboard-controls .layui-btn:hover {
+            background: rgba(0, 216, 255, 0.1);
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .card {
+            background: rgba(25, 32, 48, 0.8);
+            border: 1px solid #2c3e50;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        .card-title {
+            font-size: 16px;
+            color: #00d8ff;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d8ff;
+            padding-left: 10px;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .stat-label {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+        }
+        .text-green { color: #00ff7f; }
+        .text-yellow { color: #ffd700; }
+        .text-red { color: #ff4500; }
+        .text-blue { color: #00d8ff; }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .alert-list {
+            height: 200px;
+            overflow-y: auto;
+        }
+        .alert-item {
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-time { color: #aaa; width: 140px; }
+        .alert-content { color: #ff4500; flex: 1; margin-left: 10px; }
+        .alert-user { color: #00d8ff; width: 100px; text-align: right; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .ai-report-box {
+            height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ddd;
+        }
+        
+        .fullscreen-btn {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-header">
+    <div class="dashboard-title"><i class="layui-icon layui-icon-chart-screen"></i> 快乐星球聊天室 - 数字大屏</div>
+    <div class="dashboard-time" id="currentTime"></div>
+    <div class="dashboard-controls">
+        <button class="layui-btn layui-btn-sm" onclick="toggleFullScreen()">
+            <i class="layui-icon layui-icon-screen-full"></i> 全屏
+        </button>
+        <button class="layui-btn layui-btn-sm" onclick="location.reload()">
+            <i class="layui-icon layui-icon-refresh"></i> 刷新
+        </button>
+        <button class="layui-btn layui-btn-sm" onclick="history.back()">
+            <i class="layui-icon layui-icon-return"></i> 返回
+        </button>
+    </div>
+</div>
+
+<div class="main-content">
+    <!-- Top Stats -->
+    <div class="layui-row layui-col-space20">
+        <div class="layui-col-md3">
+            <div class="card">
+                <div class="card-title">总用户数</div>
+                <div class="stat-number text-blue" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="card">
+                <div class="card-title">当前在线</div>
+                <div class="stat-number text-green" id="onlineUsers">0</div>
+                <div class="stat-label">Online Users</div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="card">
+                <div class="card-title">今日消息</div>
+                <div class="stat-number text-yellow" id="todayMessages">0</div>
+                <div class="stat-label">Today Messages</div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="card">
+                <div class="card-title">风险预警</div>
+                <div class="stat-number text-red" id="alertCount">0</div>
+                <div class="stat-label">Risk Alerts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Charts -->
+    <div class="layui-row layui-col-space20">
+        <div class="layui-col-md8">
+            <div class="card">
+                <div class="card-title">消息趋势 (近7天)</div>
+                <div id="msgTrendChart" class="chart-container"></div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="card">
+                <div class="card-title">用户分布</div>
+                <div id="userDistChart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="layui-row layui-col-space20">
+        <div class="layui-col-md4">
+            <div class="card">
+                <div class="card-title">活跃房间 TOP5</div>
+                <div id="activeRoomsChart" class="chart-container"></div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="card">
+                <div class="card-title">
+                    AI 实时监控报告 
+                    <button class="layui-btn layui-btn-xs layui-btn-normal" style="float: right;" onclick="generateReport()">生成报告</button>
+                </div>
+                <div class="ai-report-box" id="aiReport">
+                    <p>点击“生成报告”以获取最新的系统分析报告...</p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="card">
+                <div class="card-title">实时预警监控</div>
+                <div class="alert-list" id="alertList">
+                    <!-- Alerts will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='lib/layui/layui.js') }}"></script>
+<script>
+    // Clock
+    function updateTime() {
+        var now = new Date();
+        document.getElementById('currentTime').innerText = now.toLocaleString();
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Charts Init
+    var msgTrendChart = echarts.init(document.getElementById('msgTrendChart'));
+    var userDistChart = echarts.init(document.getElementById('userDistChart'));
+    var activeRoomsChart = echarts.init(document.getElementById('activeRoomsChart'));
+
+    // Resize charts on window resize
+    window.onresize = function() {
+        msgTrendChart.resize();
+        userDistChart.resize();
+        activeRoomsChart.resize();
+    };
+
+    // Fullscreen function
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    // Data Fetching
+    function loadData() {
+        fetch("{{ url_for('admin.dashboard_stats') }}")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error('Server error:', data.error);
+                    return;
+                }
+                // Update Top Stats
+                document.getElementById('totalUsers').innerText = data.total_users;
+                document.getElementById('onlineUsers').innerText = data.online_users;
+                document.getElementById('todayMessages').innerText = data.today_messages;
+                document.getElementById('alertCount').innerText = data.alerts.length;
+
+                // Update Message Trend Chart
+                var trendOption = {
+                    backgroundColor: 'transparent',
+                    tooltip: { trigger: 'axis' },
+                    grid: { top: '10%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: data.msg_trend.dates,
+                        axisLine: { lineStyle: { color: '#aaa' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLine: { lineStyle: { color: '#aaa' } },
+                        splitLine: { lineStyle: { color: '#333' } }
+                    },
+                    series: [{
+                        name: '消息量',
+                        type: 'line',
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                offset: 0, color: 'rgba(0, 216, 255, 0.5)'
+                            }, {
+                                offset: 1, color: 'rgba(0, 216, 255, 0)'
+                            }])
+                        },
+                        itemStyle: { color: '#00d8ff' },
+                        data: data.msg_trend.counts
+                    }]
+                };
+                msgTrendChart.setOption(trendOption);
+
+                // Update User Dist Chart
+                var distOption = {
+                    backgroundColor: 'transparent',
+                    tooltip: { trigger: 'item' },
+                    legend: { bottom: '0%', textStyle: { color: '#fff' } },
+                    series: [{
+                        name: '用户类型',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        label: { show: false, position: 'center' },
+                        emphasis: {
+                            label: { show: true, fontSize: '20', fontWeight: 'bold', color: '#fff' }
+                        },
+                        labelLine: { show: false },
+                        data: data.user_dist,
+                        itemStyle: {
+                            color: function(params) {
+                                var colors = ['#00d8ff', '#ff4500', '#ffd700'];
+                                return colors[params.dataIndex % colors.length];
+                            }
+                        }
+                    }]
+                };
+                userDistChart.setOption(distOption);
+
+                // Update Active Rooms Chart
+                var roomOption = {
+                    backgroundColor: 'transparent',
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                    grid: { top: '10%', left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        data: data.active_rooms.map(item => item.name),
+                        axisLine: { lineStyle: { color: '#aaa' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLine: { lineStyle: { color: '#aaa' } },
+                        splitLine: { lineStyle: { color: '#333' } }
+                    },
+                    series: [{
+                        name: '活跃度',
+                        type: 'bar',
+                        data: data.active_rooms.map(item => item.value),
+                        itemStyle: { color: '#00ff7f' }
+                    }]
+                };
+                activeRoomsChart.setOption(roomOption);
+
+                // Update Alerts
+                var alertListHtml = '';
+                if (data.alerts.length === 0) {
+                    alertListHtml = '<div style="text-align: center; color: #666; padding: 20px;">暂无风险预警</div>';
+                } else {
+                    data.alerts.forEach(alert => {
+                        alertListHtml += `
+                            <div class="alert-item">
+                                <span class="alert-time">${alert.time}</span>
+                                <span class="alert-content">[${alert.type}] ${alert.content}</span>
+                                <span class="alert-user">${alert.user} @ ${alert.room}</span>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('alertList').innerHTML = alertListHtml;
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                document.getElementById('aiReport').innerHTML = '<p style="color: red;">数据加载失败: ' + error.message + '</p>';
+            })
+            .finally(() => {
+                // Poll again after 5 seconds, regardless of success/failure
+                // This prevents request pile-up if server is slow
+                setTimeout(loadData, 5000);
+            });
+    }
+
+    // Initial load
+    loadData();
+
+    // AI Report Generation (Mock for now, can be connected to real AI endpoint)
+    function generateReport() {
+        var reportBox = document.getElementById('aiReport');
+        reportBox.innerHTML = '<p style="color: #00d8ff;">正在生成AI分析报告...</p>';
+        
+        // Use the existing AI analysis API via fetch
+        // Since we don't have a direct "generate report" API for dashboard, 
+        // we can construct a prompt and call the chat API or a new endpoint.
+        // For now, let's use a simulated delay then show a report based on current data.
+        
+        fetch("{{ url_for('admin.dashboard_stats') }}")
+            .then(response => response.json())
+            .then(data => {
+                // Construct a prompt context
+                var context = `系统当前状态：总用户${data.total_users}人，在线${data.online_users}人，今日消息${data.today_messages}条。活跃房间：${data.active_rooms.map(r=>r.name).join(', ')}。风险预警：${data.alerts.length}条。`;
+                
+                // Call AI Chat API (admin.ai_analysis_chat)
+                fetch("{{ url_for('admin.ai_analysis_chat') }}", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: "请根据以下系统数据生成一份简短的实时监控报告，包含风险评估和运营建议：" + context,
+                        model_id: "" // Use default
+                    })
+                })
+                .then(response => {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullText = '';
+                    reportBox.innerHTML = ''; // Clear loading
+
+                    function read() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) return;
+                            const chunk = decoder.decode(value);
+                            const lines = chunk.split('\n\n');
+                            lines.forEach(line => {
+                                if (line.startsWith('data: ')) {
+                                    const dataStr = line.replace('data: ', '');
+                                    if (dataStr === '[DONE]') return;
+                                    try {
+                                        const json = JSON.parse(dataStr);
+                                        if (json.content) {
+                                            fullText += json.content;
+                                            // Simple markdown to html (very basic)
+                                            // Ideally use marked.js, but for now just text
+                                            reportBox.innerText = fullText; 
+                                            reportBox.scrollTop = reportBox.scrollHeight;
+                                        }
+                                    } catch (e) {}
+                                }
+                            });
+                            read();
+                        });
+                    }
+                    read();
+                })
+                .catch(err => {
+                    reportBox.innerHTML = '<p style="color: red;">生成失败: ' + err + '</p>';
+                });
+            });
+    }
+</script>
+</body>
+</html>

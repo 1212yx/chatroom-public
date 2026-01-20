@@ -1,0 +1,70 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<fieldset class="layui-elem-field layui-field-title">
+  <legend>房间成员列表 - {{ room['name'] }}</legend>
+</fieldset>
+
+<div class="layui-btn-container">
+    <a href="{{ url_for('admin.room_list') }}" class="layui-btn layui-btn-primary">返回房间列表</a>
+</div>
+
+<table class="layui-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>用户名</th>
+      <th>加入时间</th>
+      <th>最后登录</th>
+      <th>状态</th>
+      <th>操作</th>
+    </tr> 
+  </thead>
+  <tbody>
+    {% for user in members %}
+    <tr>
+      <td>{{ user['id'] }}</td>
+      <td>{{ user['username'] }}</td>
+      <td>{{ user['joined_at'] }}</td>
+      <td>{{ user['last_login_at'] }}</td>
+      <td>
+          {% if user['is_banned'] %}
+          <span class="layui-badge">封禁</span>
+          {% else %}
+          <span class="layui-badge layui-bg-green">正常</span>
+          {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('admin.user_view', user_id=user['id']) }}" class="layui-btn layui-btn-xs layui-btn-primary">查看</a>
+        {% if user['is_banned'] %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_ban', user_id=user['id'], status=0) }}" class="layui-btn layui-btn-xs layui-btn-normal btn-action" data-confirm="确定解封该用户吗？">解封</a>
+        {% else %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_ban', user_id=user['id'], status=1) }}" class="layui-btn layui-btn-xs layui-btn-warm btn-action" data-confirm="确定封禁该用户吗？">封禁</a>
+        {% endif %}
+        <a href="javascript:;" data-url="{{ url_for('admin.user_delete', user_id=user['id']) }}" class="layui-btn layui-btn-xs layui-btn-danger btn-action" data-confirm="确定删除该用户吗？">删除</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div id="pagination"></div>
+
+<script>
+layui.use('laypage', function(){
+  var laypage = layui.laypage;
+  
+  laypage.render({
+    elem: 'pagination',
+    count: Number('{{ total_members }}'),
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        loadPage("{{ url_for('admin.room_members', room_id=room['id']) }}?page=" + obj.curr);
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

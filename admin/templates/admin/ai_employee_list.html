@@ -1,0 +1,72 @@
+{% extends session.base_layout %}
+
+{% block title %}AI数字员工管理{% endblock %}
+
+{% block content %}
+<div class="layui-card">
+    <div class="layui-card-header">
+        AI数字员工列表
+        <a href="{{ url_for('admin.ai_employee_add') }}" class="layui-btn layui-btn-sm layui-btn-normal" style="float: right; margin-top: 5px;">添加数字员工</a>
+    </div>
+    <div class="layui-card-body">
+        <table class="layui-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>称号</th>
+                    <th>创建时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.id }}</td>
+                    <td>{{ employee.username }}</td>
+                    <td>{{ employee.title or '-' }}</td>
+                    <td>{{ employee.created_at }}</td>
+                    <td>
+                        {% if employee.is_banned %}
+                        <span class="layui-badge">已禁用</span>
+                        {% else %}
+                        <span class="layui-badge layui-bg-green">正常</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.ai_employee_edit', user_id=employee.id) }}" class="layui-btn layui-btn-xs">编辑</a>
+                        {% if employee.is_banned %}
+                        <a href="javascript:;" data-url="{{ url_for('admin.ai_employee_toggle_status', user_id=employee.id) }}" class="layui-btn layui-btn-xs layui-btn-warm btn-action">启用</a>
+                        {% else %}
+                        <a href="javascript:;" data-url="{{ url_for('admin.ai_employee_toggle_status', user_id=employee.id) }}" class="layui-btn layui-btn-xs layui-btn-warm btn-action">禁用</a>
+                        {% endif %}
+                        <a href="javascript:;" data-url="{{ url_for('admin.ai_employee_delete', user_id=employee.id) }}" data-confirm="确定要删除该数字员工吗？" class="layui-btn layui-btn-xs layui-btn-danger btn-action">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div id="pagination"></div>
+    </div>
+</div>
+
+<script>
+layui.use(['laypage'], function(){
+    var laypage = layui.laypage;
+    
+    laypage.render({
+        elem: 'pagination',
+        count: parseInt('{{ total }}'),
+        limit: 20,
+        curr: parseInt('{{ page }}'),
+        jump: function(obj, first){
+            if(!first){
+                loadPage("{{ url_for('admin.ai_employee_list') }}?page=" + obj.curr);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

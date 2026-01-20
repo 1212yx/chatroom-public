@@ -1,0 +1,75 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 1200px; margin: 0 auto;">
+    <div class="layui-card-header">
+      角色管理
+      <a href="{{ url_for('admin.role_add') }}" class="layui-btn layui-btn-sm layui-btn-normal layui-btn-radius" style="float: right; margin-top: 5px;">新增角色</a>
+    </div>
+    <div class="layui-card-body">
+      <table class="layui-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>角色名称</th>
+            <th>描述</th>
+            <th>关联菜单</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for role in roles %}
+          <tr>
+            <td>{{ role.id }}</td>
+            <td>{{ role.name }}</td>
+            <td>{{ role.description or '' }}</td>
+            <td>
+              {% set names = role_menu_names.get(role.id) or [] %}
+              {% if names %}
+              {{ names|join('、') }}
+              {% else %}
+              <span style="color:#ccc;">未关联菜单</span>
+              {% endif %}
+            </td>
+            <td>{{ role.created_at.split('T')[0] if role.created_at else '' }}</td>
+            <td>
+              <a href="{{ url_for('admin.role_edit', role_id=role.id) }}" class="layui-btn layui-btn-xs layui-btn-radius">编辑</a>
+              <a href="javascript:;" data-url="{{ url_for('admin.role_delete', role_id=role.id) }}" data-confirm="确定删除该角色吗？" class="layui-btn layui-btn-xs layui-btn-danger layui-btn-radius btn-action" style="margin-left: 4px;">删除</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;">暂无数据</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if total_pages > 1 %}
+      <div id="page"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['laypage','jquery'], function(){
+  var laypage = layui.laypage;
+  var $ = layui.$;
+  laypage.render({
+    elem: 'page',
+    count: Number('{{ total_roles }}'),
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        var url = "{{ url_for('admin.role_list') }}?page=" + obj.curr;
+        window.location.href = url;
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
+

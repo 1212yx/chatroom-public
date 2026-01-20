@@ -1,0 +1,57 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 900px; margin: 0 auto;">
+    <div class="layui-card-header">
+      {{ '编辑角色' if role else '新增角色' }}
+      <a href="{{ url_for('admin.role_list') }}" class="layui-btn layui-btn-sm layui-btn-primary layui-btn-radius" style="float: right; margin-top: 5px;">返回列表</a>
+    </div>
+    <div class="layui-card-body">
+      <form class="layui-form" method="post" action="">
+        <div class="layui-form-item">
+          <label class="layui-form-label">角色名称</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" required lay-verify="required" placeholder="请输入角色名称" autocomplete="off" class="layui-input" value="{{ role.name if role else '' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">角色描述</label>
+          <div class="layui-input-block">
+            <textarea name="description" placeholder="请输入角色说明" class="layui-textarea" style="min-height: 80px;">{{ role.description if role and role.description else '' }}</textarea>
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">关联菜单</label>
+          <div class="layui-input-block">
+            <div class="layui-row layui-col-space10">
+              {% set selected_ids = selected_menu_ids or [] %}
+              {% for menu in menus %}
+              <div class="layui-col-md4">
+                <input type="checkbox" name="menu_ids" value="{{ menu.id }}" title="{{ (menu.category or '菜单') ~ ' - ' ~ menu.name }}" lay-skin="primary" {% if menu.id in selected_ids %}checked{% endif %}>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <div class="layui-input-block">
+            <button class="layui-btn layui-btn-radius" lay-submit lay-filter="formSubmit">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-radius">重置</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form;
+});
+</script>
+{% endblock %}
+

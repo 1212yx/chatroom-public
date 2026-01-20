@@ -1,0 +1,80 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 1000px; margin: 0 auto;">
+    <div class="layui-card-header">
+      管理员管理
+      <a href="{{ url_for('admin.admin_add') }}" class="layui-btn layui-btn-sm layui-btn-normal layui-btn-radius" style="float: right; margin-top: 5px;">新增管理员</a>
+    </div>
+    <div class="layui-card-body">
+      <table class="layui-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>角色</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for admin in admins %}
+          <tr>
+            <td>{{ admin.id }}</td>
+            <td>
+              {{ admin.username }}
+              {% if admin.username == 'admin' %}
+              <span class="layui-badge layui-bg-blue">默认</span>
+              {% endif %}
+            </td>
+            <td>
+              {% set names = admin_roles.get(admin.id) or [] %}
+              {% if names %}
+              {{ names|join('、') }}
+              {% else %}
+              <span style="color:#ccc;">未分配角色</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('admin.admin_edit', admin_id=admin.id) }}" class="layui-btn layui-btn-xs layui-btn-radius">编辑</a>
+              {% if admin.username == 'admin' %}
+              <button class="layui-btn layui-btn-xs layui-btn-disabled layui-btn-radius" disabled>删除</button>
+              {% else %}
+              <a href="javascript:;" data-url="{{ url_for('admin.admin_delete', admin_id=admin.id) }}" data-confirm="确定删除该管理员吗？" class="layui-btn layui-btn-xs layui-btn-danger layui-btn-radius btn-action" style="margin-left: 4px;">删除</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center;">暂无数据</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if total_pages > 1 %}
+      <div id="page"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['laypage','jquery'], function(){
+  var laypage = layui.laypage;
+  var $ = layui.$;
+  laypage.render({
+    elem: 'page',
+    count: Number('{{ total_admins }}'),
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        var url = "{{ url_for('admin.admin_list') }}?page=" + obj.curr;
+        window.location.href = url;
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
+

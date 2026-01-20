@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萱聊 - 登录</title>
+    <!-- Bootstrap 2.3.2 (using for basic reset/forms mostly, but overriding with custom) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/css/bootstrap-responsive.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.4.0-web/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <canvas class="bg-canvas" id="particleCanvas"></canvas>
+    <div class="login-container">
+        <div class="app-logo">
+            <i class="fa-solid fa-comments"></i>
+        </div>
+        <div class="app-title">萱聊</div>
+        <form id="loginForm" action="/login" method="post">
+            <div class="form-group">
+                <input type="text" class="form-control" id="nickname" name="username" placeholder="请输入昵称" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-group">
+                <select class="form-control server-select" id="ws_server" name="ws_server">
+                    {% if servers %}
+                        {% for server in servers %}
+                        <option value="{{ server['id'] }}">{{ server['name'] }} ({{ server['host'] }}:{{ server['port'] }})</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="">默认服务器 ({{ server_host }})</option>
+                    {% endif %}
+                </select>
+            </div>
+            {% if error %}
+            <div class="form-group" style="color:#e17055;font-size:13px;margin-bottom:10px;">{{ error }}</div>
+            {% endif %}
+            <button type="submit" class="btn-login">立即进入</button>
+        </form>
+        <div class="footer-link">
+            还没有账号？ <a href="{{ url_for('register') }}">立即注册</a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.5.1.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#loginForm').on('submit', function(e) {
+                var nickname = $('#nickname').val().trim();
+                if (!nickname) {
+                    e.preventDefault();
+                    alert('请输入昵称！');
+                }
+                var password = $('#password').val();
+                if (!password) {
+                    e.preventDefault();
+                    alert('请输入密码！');
+                    return;
+                }
+
+                var now = new Date();
+                var nowStr = now.toLocaleString();
+                var key = 'xuanliao_profile_' + nickname;
+                var profile = null;
+                try {
+                    var raw = localStorage.getItem(key);
+                    if (raw) {
+                        profile = JSON.parse(raw) || {};
+                    } else {
+                        profile = {};
+                    }
+                } catch (err) {
+                    profile = {};
+                }
+                if (!profile.registeredAt) {
+                    profile.registeredAt = nowStr;
+                }
+                profile.lastLoginAt = nowStr;
+                profile.password = password;
+                try {
+                    localStorage.setItem(key, JSON.stringify(profile));
+                } catch (err) {}
+            });
+
+            (function initParticles() {
+                const canvas = document.getElementById('particleCanvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+
+                const state = {
+                    dpr: Math.max(1, window.devicePixelRatio || 1),
+                    width: 0,
+                    height: 0,
+                    particles: [],
+                    rafId: 0
+                };
+
+                function resize() {
+                    state.dpr = Math.max(1, window.devicePixelRatio || 1);
+                    state.width = window.innerWidth;
+                    state.height = window.innerHeight;
+                    canvas.width = Math.floor(state.width * state.dpr);
+                    canvas.height = Math.floor(state.height * state.dpr);
+                    canvas.style.width = state.width + 'px';
+                    canvas.style.height = state.height + 'px';
+                    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+
+                    const area = state.width * state.height;
+                    const targetCount = Math.max(60, Math.min(140, Math.floor(area / 14000)));
+                    while (state.particles.length < targetCount) {
+                        state.particles.push(createParticle(true));
+                    }
+                    while (state.particles.length > targetCount) {
+                        state.particles.pop();
+                    }
+                }
+
+                function rand(min, max) {
+                    return min + Math.random() * (max - min);
+                }
+
+                function createParticle(randomizePosition) {
+                    const x = randomizePosition ? rand(0, state.width) : (Math.random() < 0.5 ? -20 : state.width + 20);
+                    const y = randomizePosition ? rand(0, state.height) : rand(0, state.height);
+                    const speed = rand(0.25, 0.9);
+                    const angle = rand(0, Math.PI * 2);
+
+                    return {
+                        x,
+                        y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        r: rand(1.2, 2.6),
+                        a: rand(0.25, 0.7)
+                    };
+                }
+
+                function step() {
+                    ctx.clearRect(0, 0, state.width, state.height);
+
+                    for (let i = 0; i < state.particles.length; i++) {
+                        const p = state.particles[i];
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        if (p.x < -40 || p.x > state.width + 40 || p.y < -40 || p.y > state.height + 40) {
+                            state.particles[i] = createParticle(false);
+                        }
+                    }
+
+                    for (let i = 0; i < state.particles.length; i++) {
+                        const p = state.particles[i];
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.a})`;
+                        ctx.fill();
+                    }
+
+                    const maxDist = 110;
+                    for (let i = 0; i < state.particles.length; i++) {
+                        for (let j = i + 1; j < state.particles.length; j++) {
+                            const a = state.particles[i];
+                            const b = state.particles[j];
+                            const dx = a.x - b.x;
+                            const dy = a.y - b.y;
+                            const d = Math.sqrt(dx * dx + dy * dy);
+                            if (d < maxDist) {
+                                const alpha = (1 - d / maxDist) * 0.22;
+                                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(a.x, a.y);
+                                ctx.lineTo(b.x, b.y);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+
+                    state.rafId = window.requestAnimationFrame(step);
+                }
+
+                window.addEventListener('resize', resize, { passive: true });
+                resize();
+                step();
+            })();
+        });
+    </script>
+</body>
+</html>

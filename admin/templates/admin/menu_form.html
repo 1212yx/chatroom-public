@@ -1,0 +1,71 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 800px; margin: 0 auto;">
+    <div class="layui-card-header">
+      {{ '编辑菜单' if menu else '新增菜单' }}
+      <a href="{{ url_for('admin.menu_list') }}" class="layui-btn layui-btn-sm layui-btn-primary layui-btn-radius" style="float: right; margin-top: 5px;">返回列表</a>
+    </div>
+    <div class="layui-card-body">
+      <form class="layui-form" method="post" action="">
+        <div class="layui-form-item">
+          <label class="layui-form-label">菜单名称</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" required lay-verify="required" placeholder="请输入菜单名称" autocomplete="off" class="layui-input" value="{{ menu.name if menu else '' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">所属分组</label>
+          <div class="layui-input-block">
+            <input type="text" name="category" placeholder="例如：用户管理、系统管理" autocomplete="off" class="layui-input" value="{{ menu.category if menu and menu.category else '' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">图标类名</label>
+          <div class="layui-input-block">
+            <input type="text" name="icon" placeholder="例如：fa-solid fa-user" autocomplete="off" class="layui-input" value="{{ menu.icon if menu and menu.icon else '' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">链接地址</label>
+          <div class="layui-input-block">
+            <input type="text" name="url" required lay-verify="required" placeholder="例如：/admin/users" autocomplete="off" class="layui-input" value="{{ menu.url if menu else '' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">排序值</label>
+          <div class="layui-input-block">
+            <input type="number" name="sort_order" placeholder="数字越小越靠前" autocomplete="off" class="layui-input" value="{{ menu.sort_order if menu is not none else '0' }}">
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <label class="layui-form-label">状态</label>
+          <div class="layui-input-block">
+            <input type="checkbox" name="is_active" lay-skin="switch" lay-text="启用|禁用" value="1" {{ 'checked' if not menu or menu.is_active else '' }}>
+          </div>
+        </div>
+
+        <div class="layui-form-item">
+          <div class="layui-input-block">
+            <button class="layui-btn layui-btn-radius" lay-submit lay-filter="formSubmit">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-radius">重置</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form;
+});
+</script>
+{% endblock %}
+

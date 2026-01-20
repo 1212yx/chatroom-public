@@ -1,0 +1,64 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 800px; margin: 0 auto;">
+    <div class="layui-card-header">
+      {{ '编辑接口' if interface else '新增接口' }}
+      <a href="{{ url_for('admin.interface_list') }}" class="layui-btn layui-btn-sm layui-btn-primary layui-btn-radius" style="float: right; margin-top: 5px;">返回列表</a>
+    </div>
+    <div class="layui-card-body">
+      <form class="layui-form" method="post" action="">
+        <div class="layui-form-item">
+          <label class="layui-form-label">接口名称</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" required lay-verify="required" placeholder="请输入接口名称" autocomplete="off" class="layui-input" value="{{ interface.name if interface else '' }}">
+          </div>
+        </div>
+        
+        <div class="layui-form-item">
+          <label class="layui-form-label">调用指令</label>
+          <div class="layui-input-block">
+            <input type="text" name="command" required lay-verify="required" placeholder="例如：@天气" autocomplete="off" class="layui-input" value="{{ interface.command if interface else '' }}">
+            <div class="layui-form-mid layui-word-aux">用户在聊天中输入该指令时将触发接口调用，必须以@开头</div>
+          </div>
+        </div>
+        
+        <div class="layui-form-item">
+          <label class="layui-form-label">接口地址</label>
+          <div class="layui-input-block">
+            <input type="text" name="url" required lay-verify="required|url" placeholder="请输入完整的API地址" autocomplete="off" class="layui-input" value="{{ interface.url if interface else '' }}">
+          </div>
+        </div>
+        
+        <div class="layui-form-item">
+          <label class="layui-form-label">Token</label>
+          <div class="layui-input-block">
+            <input type="text" name="token" placeholder="可选填，用于接口鉴权" autocomplete="off" class="layui-input" value="{{ interface.token if interface and interface.token else '' }}">
+          </div>
+        </div>
+        
+        <div class="layui-form-item">
+          <label class="layui-form-label">状态</label>
+          <div class="layui-input-block">
+            <input type="checkbox" name="is_active" lay-skin="switch" lay-text="启用|禁用" {{ 'checked' if not interface or interface.is_active else '' }}>
+          </div>
+        </div>
+        
+        <div class="layui-form-item">
+          <div class="layui-input-block">
+            <button class="layui-btn layui-btn-radius" lay-submit lay-filter="formDemo">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-radius">重置</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form;
+});
+</script>
+{% endblock %}

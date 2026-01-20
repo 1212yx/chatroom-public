@@ -1,0 +1,119 @@
+{% extends session.get('base_layout', 'admin/base.html') %}
+
+{% block content %}
+<div class="layui-fluid">
+  <div class="layui-card" style="max-width: 1200px; margin: 0 auto;">
+    <div class="layui-card-header">
+      接口管理
+      <a href="{{ url_for('admin.interface_add') }}" class="layui-btn layui-btn-sm layui-btn-normal layui-btn-radius" style="float: right; margin-top: 5px;">新增接口</a>
+    </div>
+    <div class="layui-card-body">
+      <table class="layui-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>接口名称</th>
+            <th>调用指令</th>
+            <th>接口地址</th>
+            <th>Token</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for interface in interfaces %}
+          <tr>
+            <td>{{ interface.id }}</td>
+            <td>{{ interface.name }}</td>
+            <td><span class="layui-badge layui-bg-blue">{{ interface.command }}</span></td>
+            <td>{{ interface.url }}</td>
+            <td>
+              {% if interface.token %}
+              <span title="{{ interface.token }}">已设置</span>
+              {% else %}
+              <span style="color: #ccc;">无</span>
+              {% endif %}
+            </td>
+            <td>
+              <input type="checkbox" name="is_active" value="{{ interface.id }}" lay-skin="switch" lay-text="启用|禁用" lay-filter="status" {{ 'checked' if interface.is_active else '' }}>
+            </td>
+            <td>{{ interface.created_at.split('T')[0] }}</td>
+            <td>
+              <div>
+                <a href="{{ url_for('admin.interface_edit', interface_id=interface.id) }}" class="layui-btn layui-btn-xs layui-btn-radius">编辑</a>
+                <button class="layui-btn layui-btn-xs layui-btn-danger btn-delete layui-btn-radius" data-id="{{ interface.id }}" style="margin-left: 5px;">删除</button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center;">暂无数据</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      {% if total_pages > 1 %}
+      <div id="page"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['layer', 'form', 'laypage'], function(){
+  var layer = layui.layer;
+  var form = layui.form;
+  var laypage = layui.laypage;
+  var $ = layui.$;
+  
+  // 分页
+  laypage.render({
+    elem: 'page',
+    count: Number('{{ total_interfaces }}'), // 总条数
+    limit: 20,
+    curr: Number('{{ page }}'),
+    jump: function(obj, first){
+      if(!first){
+        window.location.href = "{{ url_for('admin.interface_list') }}?page=" + obj.curr;
+      }
+    }
+  });
+  
+  // 状态切换
+  form.on('switch(status)', function(data){
+    var id = data.value;
+    $.post("{{ url_for('admin.interface_toggle_status') }}", {id: id}, function(res){
+      res = JSON.parse(res);
+      if(res.code === 0){
+        layer.msg('操作成功');
+      } else {
+        layer.msg(res.msg);
+        data.elem.checked = !data.elem.checked;
+        form.render('checkbox');
+      }
+    });
+  });
+  
+  // 删除
+  $('.btn-delete').click(function(){
+    var id = $(this).data('id');
+    layer.confirm('确定要删除该接口吗？', function(index){
+      $.post("{{ url_for('admin.interface_delete') }}", {id: id}, function(res){
+        res = JSON.parse(res);
+        if(res.code === 0){
+          layer.msg('删除成功');
+          setTimeout(function(){
+            location.reload();
+          }, 1000);
+        } else {
+          layer.msg(res.msg);
+        }
+      });
+      layer.close(index);
+    });
+  });
+});
+</script>
+{% endblock %}
